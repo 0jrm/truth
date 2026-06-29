@@ -21,7 +21,7 @@ notes/*.md  ──► agent (memory_write) ──► log.md
 pip install -e .
 ```
 
-The first index run downloads the embedding model (~80MB, one-time, stays local).
+The first index run downloads the embedding model (~550MB one-time for nomic-embed-text-v1.5, stays local).
 
 ## Quick start
 
@@ -65,6 +65,25 @@ memory_write(
 | `TRUTH_DB_PATH` | `{notes_root}/memory.db` | SQLite index file (colocated with notes for browser inspector) |
 
 If you have an older `memory.db` at the project root, move it: `mv memory.db notes/` or set `TRUTH_DB_PATH`.
+
+### Upgrading from v1.0
+
+v1.1 changes the embedding model (384-dim MiniLM → 768-dim nomic) and the FTS tokenizer (trigram → porter unicode61). Both require a **full re-index** — old chunk vectors and FTS tokens are incompatible.
+
+```bash
+# back up if needed, then remove the stale index
+rm notes/memory.db
+truth index
+```
+
+On first open, an existing database auto-migrates index tables (drops old chunks/vec/fts) via `init_schema`, but you still must run `truth index` to rebuild embeddings.
+
+Optional sanity check after re-indexing:
+
+```bash
+python -m truth.index.search_quality
+# search_quality=ok
+```
 
 ## Browser inspector
 
@@ -169,9 +188,9 @@ notes/inspector.html  # optional — from truth export
 
 - Python 3.11+
 - [sqlite-vec](https://github.com/asg017/sqlite-vec) — vector search in SQLite
-- [sentence-transformers](https://www.sbert.net/) — local ONNX embeddings (`all-MiniLM-L6-v2`, 384-dim)
+- [sentence-transformers](https://www.sbert.net/) — local ONNX embeddings (`nomic-ai/nomic-embed-text-v1.5`, 768-dim)
 - [watchdog](https://github.com/gorakhargosh/watchdog) — file system events
-- Search: vector + BM25 (FTS5) + Reciprocal Rank Fusion
+- Search: vector + BM25 (FTS5 porter unicode61) + Reciprocal Rank Fusion
 
 ## Roadmap
 
@@ -183,7 +202,6 @@ notes/inspector.html  # optional — from truth export
 
 ## Known ceilings (v1)
 
-- Trigram FTS tokenizer is language-agnostic but degrades on very large corpora (10k+ notes)
-- `memory_search` opens a new DB connection per call — fine for agent use, worth a singleton for high-frequency loops
 - `log.md` grows unbounded; trim manually or rotate at a future milestone
-- Embedding upgrade path: swap `all-MiniLM-L6-v2` for `nomic-embed-text-v1.5` (768-dim, better recall) by changing one line in `truth/index/embeddings.py`
+- Porter FTS stems English aggressively; non-English corpora may need a different tokenizer
+- Very large corpora (10k+ notes) may need tuning of chunk size or R3 limits
