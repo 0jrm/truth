@@ -9,6 +9,9 @@
     body { margin: 0; background: #1a1a1a; color: #e8e8e8; }
     header { padding: 1rem 1.25rem; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 1rem; }
     h1 { margin: 0; font-size: 1.1rem; font-weight: 600; flex: 1; }
+    input[type="search"] { flex: 1; max-width: 24rem; background: #333; color: #e8e8e8; border: 1px solid #555; padding: 0.35rem 0.75rem; border-radius: 4px; font-size: 0.85rem; }
+    input[type="search"]::placeholder { color: #888; }
+    label.live { font-size: 0.85rem; display: flex; align-items: center; gap: 0.35rem; cursor: pointer; }
     button { background: #333; color: #e8e8e8; border: 1px solid #555; padding: 0.35rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
     button:hover { background: #444; }
     main { display: grid; grid-template-columns: 1fr 1.2fr 1fr 1fr; gap: 0; min-height: calc(100vh - 3rem); }
@@ -22,16 +25,23 @@
     .edge { font-size: 0.85rem; padding: 0.2rem 0; }
     .err { color: #f66; }
     #note pre.note-body { white-space: pre-wrap; word-break: break-word; font-size: 0.85rem; margin: 0; }
+    #content-hits { margin-bottom: 0.5rem; }
+    .content-hit { padding: 0.35rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; border-left: 2px solid #555; margin-bottom: 0.25rem; }
+    .content-hit:hover { background: #2a2a2a; }
+    .content-hit .excerpt { color: #aaa; font-size: 0.8rem; margin-top: 0.15rem; }
   </style>
 </head>
 <body>
   <header>
     <h1>Truth Inspector</h1>
+    <input type="search" id="search" placeholder="Filter tree / search content…">
+    <label class="live"><input type="checkbox" id="live"> Live</label>
     <button type="button" id="refresh">Refresh</button>
   </header>
   <main>
     <section id="tree-panel">
       <h2>Tree</h2>
+      <div id="content-hits" hidden></div>
       <ul id="tree"></ul>
     </section>
     <section id="note-panel">
@@ -53,8 +63,14 @@
     const noteEl = document.getElementById('note');
     const linksEl = document.getElementById('links');
     const changesEl = document.getElementById('changes');
+    const searchEl = document.getElementById('search');
+    const liveEl = document.getElementById('live');
+    const contentHitsEl = document.getElementById('content-hits');
     let db = null;
     let active = null;
+    let ftsPaths = new Set();
+    let dbFingerprint = null;
+    let pollTimer = null;
 
     function esc(s) {
       return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -73,9 +89,134 @@
       return rows;
     }
 
+    function sanitizeFtsQuery(q) {
+      const tokens = q.match(/\w+/g);
+      return tokens?.length ? tokens.join(' OR ') : '""';
+    }
+
+    function searchContent(query) {
+      if (!db || !/\w/.test(query)) return [];
+      const ftsQ = sanitizeFtsQuery(query);
+      let rows;
+      try {
+        // ponytail: snippet may be unsupported in some sql.js builds; fall back below
+        rows = queryAll(`
+          SELECT c.path, c.note_title, chunks_fts.rank AS r,
+                 snippet(chunks_fts, 0, '', '', '…', 12) AS excerpt
+          FROM chunks_fts
+          JOIN chunks c ON c.rowid = chunks_fts.rowid
+          WHERE chunks_fts.text MATCH ?
+          ORDER BY chunks_fts.rank
+          LIMIT 50
+        `, [ftsQ]);
+      } catch {
+        rows = queryAll(`
+          SELECT c.path, c.note_title, chunks_fts.rank AS r
+          FROM chunks_fts
+          JOIN chunks c ON c.rowid = chunks_fts.rowid
+          WHERE chunks_fts.text MATCH ?
+          ORDER BY chunks_fts.rank
+          LIMIT 50
+        `, [ftsQ]);
+      }
+      const best = new Map();
+      for (const row of rows) {
+        const prev = best.get(row.path);
+        if (!prev || row.r < prev.r) best.set(row.path, row);
+      }
+      return [...best.values()].sort((a, b) => a.r - b.r);
+    }
+
+    function substringMatch(path, title, type, q) {
+      return path.includes(q) || title.includes(q) || type.includes(q);
+    }
+
+    // ponytail: O(n) DOM filter; fine for PKM scale; union = substring OR FTS path
+    function applyTreeFilter(query) {
+      const q = query.trim().toLowerCase();
+      if (!q && !ftsPaths.size) {
+        treeEl.querySelectorAll('li').forEach(li => { li.style.display = ''; });
+        contentHitsEl.hidden = true;
+        contentHitsEl.innerHTML = '';
+        return;
+      }
+      treeEl.querySelectorAll('li').forEach(li => {
+        const path = (li.dataset.path || '').toLowerCase();
+        const type = (li.dataset.type || '').toLowerCase();
+        const title = (li.dataset.title || '').toLowerCase();
+        const subMatch = q && substringMatch(path, title, type, q);
+        const ftsMatch = ftsPaths.has(li.dataset.path);
+        li.style.display = (subMatch || ftsMatch) ? '' : 'none';
+      });
+    }
+
+    // Content hits: FTS paths that substring filter alone would not surface
+    function renderContentHits(query, hits) {
+      const q = query.trim().toLowerCase();
+      if (!q || !hits.length) {
+        contentHitsEl.hidden = true;
+        contentHitsEl.innerHTML = '';
+        return;
+      }
+      const extra = hits.filter(h => {
+        const path = (h.path || '').toLowerCase();
+        const title = (h.note_title || '').toLowerCase();
+        return !substringMatch(path, title, '', q);
+      });
+      if (!extra.length) {
+        contentHitsEl.hidden = true;
+        contentHitsEl.innerHTML = '';
+        return;
+      }
+      contentHitsEl.hidden = false;
+      contentHitsEl.innerHTML = extra.map(h =>
+        `<div class="content-hit" data-path="${esc(h.path)}">
+          <div>${esc(h.path)}</div>
+          <div class="meta">${esc(h.note_title || '')}</div>
+          ${h.excerpt ? `<div class="excerpt">${esc(h.excerpt)}</div>` : ''}
+        </div>`
+      ).join('');
+      contentHitsEl.querySelectorAll('.content-hit').forEach(el => {
+        el.addEventListener('click', () => {
+          const li = treeEl.querySelector(`li[data-path="${CSS.escape(el.dataset.path)}"]`);
+          selectNote(el.dataset.path, li);
+        });
+      });
+    }
+
+    function handleSearch() {
+      const query = searchEl.value;
+      const hits = query.trim() && db ? searchContent(query) : [];
+      ftsPaths = new Set(hits.map(h => h.path));
+      applyTreeFilter(query);
+      renderContentHits(query, hits);
+    }
+
+    // ponytail: djb2 collision unlikely for local PKM DB size; file:// cannot stat mtime
+    async function fingerprintDb() {
+      const res = await fetch('memory.db', { cache: 'no-store' });
+      if (!res.ok) throw new Error('Could not load memory.db');
+      const buf = await res.arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      let h = 5381;
+      for (const b of bytes) h = ((h << 5) + h + b) | 0;
+      return { hash: h, size: buf.byteLength };
+    }
+
+    async function pollDb() {
+      try {
+        const fp = await fingerprintDb();
+        if (dbFingerprint && fp.hash === dbFingerprint.hash && fp.size === dbFingerprint.size) return;
+        dbFingerprint = fp;
+        await refresh();
+      } catch {
+        // ponytail: transient watcher lock; retry next interval
+      }
+    }
+
     async function openDb() {
       const SQL = await initSqlJs({ locateFile: f => 'vendor/' + f });
-      const res = await fetch('memory.db');
+      const res = await fetch('memory.db', { cache: 'no-store' });
       if (!res.ok) throw new Error('Could not load memory.db — run truth index first');
       const buf = await res.arrayBuffer();
       if (db) db.close();
@@ -86,7 +227,7 @@
       const items = queryAll('SELECT path, type, title FROM notes ORDER BY path');
       treeEl.innerHTML = items.map(it => {
         const depth = depthFor(it.path);
-        return `<li data-path="${esc(it.path)}" style="padding-left:${depth * 12 + 8}px">
+        return `<li data-path="${esc(it.path)}" data-type="${esc(it.type)}" data-title="${esc(it.title)}" style="padding-left:${depth * 12 + 8}px">
           <div>${esc(it.path)}</div>
           <div class="meta">[${esc(it.type)}] ${esc(it.title)}</div>
         </li>`;
@@ -94,7 +235,8 @@
       treeEl.querySelectorAll('li').forEach(li => {
         li.addEventListener('click', () => selectNote(li.dataset.path, li));
       });
-      if (items.length) selectNote(items[0].path, treeEl.querySelector('li'));
+      if (items.length && !active) selectNote(items[0].path, treeEl.querySelector('li'));
+      handleSearch();
     }
 
     // ponytail: raw markdown in <pre> for OKF debug; disk is truth, index may lag; no renderer
@@ -155,14 +297,24 @@
       loadChanges();
       if (active) {
         const li = treeEl.querySelector(`li[data-path="${CSS.escape(active)}"]`);
-        if (li) {
-          selectNote(active, li);
-        } else {
-          active = null;
-          noteEl.innerHTML = '<p class="meta">Select a note</p>';
-        }
+        selectNote(active, li);
       }
+      dbFingerprint = await fingerprintDb();
     }
+
+    searchEl.addEventListener('input', handleSearch);
+
+    // ponytail: full DB re-fetch on hash change, not incremental sync; file:// cannot stat mtime
+    liveEl.addEventListener('change', () => {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+      if (liveEl.checked) {
+        pollDb();
+        pollTimer = setInterval(pollDb, 5000);
+      }
+    });
 
     document.getElementById('refresh').addEventListener('click', () => {
       refresh().catch(err => {

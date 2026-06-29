@@ -109,7 +109,13 @@ truth export
 # open file:///.../notes/inspector.html in your browser
 ```
 
-The page reads `memory.db` directly via sql.js (offline, no server). Click **Refresh** after `truth serve` or `truth index` updates the database.
+Open the exported `inspector.html` from your notes root (`file://` — same folder as `memory.db` and markdown files). The page reads `memory.db` via sql.js (offline, no server).
+
+**Four panels:** Tree, Note (raw markdown from disk, including frontmatter), Links, Changes. The Note panel fetches `.md` files directly; disk may be ahead of the index until the watcher reindexes.
+
+**Search** filters the tree by path, title, or type (instant substring match). It also runs FTS over indexed chunk text in `memory.db` (not hybrid vector search). Search and changelog reflect the index; the Note panel shows current file content from disk.
+
+**Live** (checkbox, default off) polls `memory.db` every ~5s and auto-refreshes when the database changes — useful with `truth serve` running for near-live debugging. **Refresh** manually reloads the database when Live is off.
 
 ## Note format (OKF)
 
