@@ -1,3 +1,4 @@
+import queue
 import threading
 import time
 from pathlib import Path
@@ -14,12 +15,23 @@ _DEBOUNCE_SEC = 0.5
 
 
 class _DebouncedIndexer(FileSystemEventHandler):
-    def __init__(self, conn, notes: Path) -> None:
-        self._conn = conn
+    def __init__(self, notes: Path) -> None:
         self._notes = notes
         self._timers: dict[str, threading.Timer] = {}
         self._lock = threading.Lock()
-        self._db_lock = threading.Lock()
+        self._queue: queue.Queue = queue.Queue()
+        self._writer = threading.Thread(target=self._writer_loop, daemon=True)
+        self._writer.start()
+
+    def _writer_loop(self) -> None:
+        conn = open_db()
+        init_schema(conn)
+        while True:
+            kind, path = self._queue.get()
+            if kind == "index":
+                index_file(conn, path, self._notes)
+            elif kind == "delete":
+                delete_file_from_index(conn, path, self._notes)
 
     def _schedule(self, key: str, fn) -> None:
         with self._lock:
@@ -47,9 +59,9 @@ class _DebouncedIndexer(FileSystemEventHandler):
         if path is None:
             return
         key = str(path)
+
         def _index() -> None:
-            with self._db_lock:
-                index_file(self._conn, path, self._notes)
+            self._queue.put(("index", path))
 
         self._schedule(key, _index)
 
@@ -65,17 +77,14 @@ class _DebouncedIndexer(FileSystemEventHandler):
         key = str(path)
 
         def _delete() -> None:
-            with self._db_lock:
-                delete_file_from_index(self._conn, path, self._notes)
+            self._queue.put(("delete", path))
 
         self._schedule(key, _delete)
 
 
 def start_watcher(block: bool = True, notes: Path | None = None) -> Observer:
     root = notes or notes_root()
-    conn = open_db()
-    init_schema(conn)
-    handler = _DebouncedIndexer(conn, root)
+    handler = _DebouncedIndexer(root)
     observer = Observer()
     observer.schedule(handler, str(root), recursive=True)
     observer.start()

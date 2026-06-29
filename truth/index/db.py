@@ -60,7 +60,7 @@ _CONN_LOCK = threading.Lock()
 
 
 def open_db(path: Path | None = None) -> sqlite3.Connection:
-    # ponytail: check_same_thread=False — watchdog Timer threads share this conn; serialize via watcher lock
+    # ponytail: check_same_thread=False — watcher writer thread owns conn; Timer threads only enqueue
     conn = sqlite3.connect(path or db_path(), check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.enable_load_extension(True)
