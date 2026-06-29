@@ -13,7 +13,7 @@ You have **persistent memory** stored as OKF markdown files on disk. Use the too
 2. **Write after learn** — run `memory_write` when you discover durable facts, decisions, or outcomes the user will need later.
 3. **OKF frontmatter** — every note must have YAML frontmatter with at least `type`. If `content` has no `---` block, pass `type` (and optional `title`).
 4. **Paths** — use relative paths like `concepts/auth.md`; only `.md` files; no `..` traversal.
-5. **Indexer** — the file watcher re-indexes notes for search (~500ms debounce). For immediate visibility in the same session, ensure `truth serve` or the watcher is running.
+5. **Indexer** — run `truth serve` (or `truth index` for one-shot) so search stays current; watcher debounce ~500ms.
 
 ## Example flow
 

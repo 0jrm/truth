@@ -50,10 +50,26 @@ def _cmd_graph(args: argparse.Namespace) -> int:
     return 0
 
 
-def _cmd_serve(args: argparse.Namespace) -> int:
-    from truth.serve import run_server
+def _cmd_serve(_args: argparse.Namespace) -> int:
+    from truth.serve import run_serve
 
-    run_server(host=args.host, port=args.port)
+    run_serve()
+    return 0
+
+
+def _cmd_index(_args: argparse.Namespace) -> int:
+    from truth.index.indexer import index_all
+
+    count = index_all()
+    print(f"indexed_files={count}")
+    return 0
+
+
+def _cmd_export(_args: argparse.Namespace) -> int:
+    from truth.export import export_inspector
+
+    path = export_inspector()
+    print(f"exported inspector to {path}")
     return 0
 
 
@@ -72,9 +88,9 @@ def main(argv: list[str] | None = None) -> int:
     p_graph = sub.add_parser("graph", help="Export link graph")
     p_graph.add_argument("--json", action="store_true", help="Output JSON nodes/edges")
 
-    p_serve = sub.add_parser("serve", help="Serve JSON API + static inspector HTML")
-    p_serve.add_argument("--port", type=int, default=8765)
-    p_serve.add_argument("--host", default="127.0.0.1")
+    sub.add_parser("serve", help="Index notes and watch for changes (Ctrl+C to stop)")
+    sub.add_parser("index", help="One-shot full reindex")
+    sub.add_parser("export", help="Copy static browser inspector into notes root")
 
     args = parser.parse_args(argv)
     handlers = {
@@ -83,6 +99,8 @@ def main(argv: list[str] | None = None) -> int:
         "changes": _cmd_changes,
         "graph": _cmd_graph,
         "serve": _cmd_serve,
+        "index": _cmd_index,
+        "export": _cmd_export,
     }
     try:
         return handlers[args.command](args)

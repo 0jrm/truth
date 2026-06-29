@@ -7,6 +7,7 @@ from pathlib import Path
 import sqlite_vec
 
 from truth.store.frontmatter import parse_note_file
+from truth.store.links import extract_links
 from truth.store.paths import notes_root
 
 from .chunking import chunk_text
@@ -41,12 +42,41 @@ def _delete_chunks_for_path(conn, path: str) -> None:
     conn.execute("DELETE FROM chunks WHERE path = ?", (path,))
 
 
+def _sync_graph(conn, resolved: Path, rel: str, root: Path, note_type: str | None, note_title: str | None) -> None:
+    mtime = resolved.stat().st_mtime
+    conn.execute(
+        """
+        INSERT INTO notes (path, type, title, mtime)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(path) DO UPDATE SET
+          type = excluded.type,
+          title = excluded.title,
+          mtime = excluded.mtime
+        """,
+        (rel, note_type, note_title, mtime),
+    )
+    conn.execute("DELETE FROM edges WHERE source = ?", (rel,))
+    for edge in extract_links(resolved, root):
+        try:
+            target_rel = _relative_path(edge.target, root)
+        except ValueError:
+            continue
+        if not target_rel.endswith(".md"):
+            continue
+        conn.execute(
+            "INSERT OR IGNORE INTO edges (source, target, label) VALUES (?, ?, ?)",
+            (rel, target_rel, edge.label),
+        )
+
+
 def delete_file_from_index(conn, path: Path, notes: Path) -> None:
     rel = _relative_path(path, notes)
     conn.execute("BEGIN")
     try:
         _delete_chunks_for_path(conn, rel)
         conn.execute("DELETE FROM files WHERE path = ?", (rel,))
+        conn.execute("DELETE FROM notes WHERE path = ?", (rel,))
+        conn.execute("DELETE FROM edges WHERE source = ? OR target = ?", (rel, rel))
         record_event(conn, rel, "delete")
         conn.commit()
     except Exception:
@@ -123,6 +153,7 @@ def index_file(conn, path: Path, notes: Path) -> bool:
             """,
             (rel, digest, _utc_now()),
         )
+        _sync_graph(conn, resolved, rel, root, note_type, note_title)
         record_event(conn, rel, "update" if is_update else "create")
         conn.commit()
     except Exception:
@@ -150,4 +181,6 @@ if __name__ == "__main__":
     count = index_all()
     conn = open_db()
     total = conn.execute("SELECT COUNT(*) AS n FROM chunks").fetchone()["n"]
-    print(f"indexed_files={count} chunks={total}")
+    notes_n = conn.execute("SELECT COUNT(*) AS n FROM notes").fetchone()["n"]
+    assert notes_n >= 3, f"expected >=3 notes rows, got {notes_n}"
+    print(f"indexed_files={count} chunks={total} notes={notes_n}")

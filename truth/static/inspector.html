@@ -7,8 +7,10 @@
   <style>
     :root { color-scheme: dark; font-family: system-ui, sans-serif; }
     body { margin: 0; background: #1a1a1a; color: #e8e8e8; }
-    header { padding: 1rem 1.25rem; border-bottom: 1px solid #333; }
-    h1 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+    header { padding: 1rem 1.25rem; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 1rem; }
+    h1 { margin: 0; font-size: 1.1rem; font-weight: 600; flex: 1; }
+    button { background: #333; color: #e8e8e8; border: 1px solid #555; padding: 0.35rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+    button:hover { background: #444; }
     main { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; min-height: calc(100vh - 3rem); }
     section { border-right: 1px solid #333; padding: 0.75rem; overflow: auto; }
     section:last-child { border-right: none; }
@@ -22,7 +24,10 @@
   </style>
 </head>
 <body>
-  <header><h1>Truth Inspector</h1></header>
+  <header>
+    <h1>Truth Inspector</h1>
+    <button type="button" id="refresh">Refresh</button>
+  </header>
   <main>
     <section id="tree-panel">
       <h2>Tree</h2>
@@ -37,23 +42,46 @@
       <ul id="changes"></ul>
     </section>
   </main>
+  <script src="vendor/sql-wasm.js"></script>
   <script>
     const treeEl = document.getElementById('tree');
     const linksEl = document.getElementById('links');
     const changesEl = document.getElementById('changes');
+    let db = null;
     let active = null;
 
     function esc(s) {
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
-    async function loadTree() {
-      const res = await fetch('/api/tree');
-      const items = await res.json();
+    function depthFor(path) {
+      return Math.max(0, path.split('/').length - 1);
+    }
+
+    function queryAll(sql, params = []) {
+      const stmt = db.prepare(sql);
+      stmt.bind(params);
+      const rows = [];
+      while (stmt.step()) rows.push(stmt.getAsObject());
+      stmt.free();
+      return rows;
+    }
+
+    async function openDb() {
+      const SQL = await initSqlJs({ locateFile: f => 'vendor/' + f });
+      const res = await fetch('memory.db');
+      if (!res.ok) throw new Error('Could not load memory.db — run truth index first');
+      const buf = await res.arrayBuffer();
+      if (db) db.close();
+      db = new SQL.Database(new Uint8Array(buf));
+    }
+
+    function loadTree() {
+      const items = queryAll('SELECT path, type, title FROM notes ORDER BY path');
       treeEl.innerHTML = items.map(it => {
-        const pad = '&nbsp;'.repeat(it.depth * 2);
-        return `<li data-path="${esc(it.path)}" style="padding-left:${it.depth * 12 + 8}px">
-          <div>${pad}${esc(it.path)}</div>
+        const depth = depthFor(it.path);
+        return `<li data-path="${esc(it.path)}" style="padding-left:${depth * 12 + 8}px">
+          <div>${esc(it.path)}</div>
           <div class="meta">[${esc(it.type)}] ${esc(it.title)}</div>
         </li>`;
       }).join('');
@@ -63,34 +91,53 @@
       if (items.length) selectNote(items[0].path, treeEl.querySelector('li'));
     }
 
-    async function selectNote(path, li) {
+    function selectNote(path, li) {
       active = path;
       treeEl.querySelectorAll('li').forEach(n => n.classList.remove('active'));
       if (li) li.classList.add('active');
-      const res = await fetch('/api/links?path=' + encodeURIComponent(path));
-      const data = await res.json();
-      if (data.error) {
-        linksEl.innerHTML = `<p class="err">${esc(data.error)}</p>`;
-        return;
-      }
-      const out = data.outgoing.map(e =>
+      const outgoing = queryAll(
+        'SELECT target, label FROM edges WHERE source = ? ORDER BY target',
+        [path]
+      );
+      const incoming = queryAll(
+        'SELECT source, label FROM edges WHERE target = ? ORDER BY source',
+        [path]
+      );
+      const out = outgoing.map(e =>
         `<div class="edge">→ ${esc(e.target)}${e.label ? ' <span class="meta">"' + esc(e.label) + '"</span>' : ''}</div>`
       ).join('') || '<p class="meta">No outgoing links</p>';
-      const inc = data.incoming.map(e =>
+      const inc = incoming.map(e =>
         `<div class="edge">← ${esc(e.source)}${e.label ? ' <span class="meta">"' + esc(e.label) + '"</span>' : ''}</div>`
       ).join('') || '<p class="meta">No incoming links</p>';
-      linksEl.innerHTML = `<p><strong>${esc(data.path)}</strong></p><h3>Outgoing</h3>${out}<h3>Incoming</h3>${inc}`;
+      linksEl.innerHTML = `<p><strong>${esc(path)}</strong></p><h3>Outgoing</h3>${out}<h3>Incoming</h3>${inc}`;
     }
 
-    async function loadChanges() {
-      const res = await fetch('/api/changes?n=20');
-      const items = await res.json();
+    function loadChanges() {
+      const items = queryAll(
+        'SELECT ts, op, path FROM events ORDER BY id DESC LIMIT 20'
+      );
       changesEl.innerHTML = items.map(ev =>
         `<li><span class="meta">${esc(ev.ts)}</span> ${esc(ev.op)} <strong>${esc(ev.path)}</strong></li>`
       ).join('') || '<li class="meta">No events yet</li>';
     }
 
-    Promise.all([loadTree(), loadChanges()]).catch(err => {
+    async function refresh() {
+      await openDb();
+      loadTree();
+      loadChanges();
+      if (active) {
+        const li = treeEl.querySelector(`li[data-path="${CSS.escape(active)}"]`);
+        selectNote(active, li);
+      }
+    }
+
+    document.getElementById('refresh').addEventListener('click', () => {
+      refresh().catch(err => {
+        treeEl.innerHTML = `<li class="err">${esc(err)}</li>`;
+      });
+    });
+
+    refresh().catch(err => {
       treeEl.innerHTML = `<li class="err">${esc(err)}</li>`;
     });
   </script>
