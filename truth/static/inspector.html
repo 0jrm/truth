@@ -11,7 +11,7 @@
     h1 { margin: 0; font-size: 1.1rem; font-weight: 600; flex: 1; }
     button { background: #333; color: #e8e8e8; border: 1px solid #555; padding: 0.35rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
     button:hover { background: #444; }
-    main { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; min-height: calc(100vh - 3rem); }
+    main { display: grid; grid-template-columns: 1fr 1.2fr 1fr 1fr; gap: 0; min-height: calc(100vh - 3rem); }
     section { border-right: 1px solid #333; padding: 0.75rem; overflow: auto; }
     section:last-child { border-right: none; }
     h2 { margin: 0 0 0.75rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #999; }
@@ -21,6 +21,7 @@
     .meta { color: #888; font-size: 0.8rem; }
     .edge { font-size: 0.85rem; padding: 0.2rem 0; }
     .err { color: #f66; }
+    #note pre.note-body { white-space: pre-wrap; word-break: break-word; font-size: 0.85rem; margin: 0; }
   </style>
 </head>
 <body>
@@ -32,6 +33,10 @@
     <section id="tree-panel">
       <h2>Tree</h2>
       <ul id="tree"></ul>
+    </section>
+    <section id="note-panel">
+      <h2>Note</h2>
+      <div id="note"><p class="meta">Select a note</p></div>
     </section>
     <section id="links-panel">
       <h2>Links</h2>
@@ -45,6 +50,7 @@
   <script src="vendor/sql-wasm.js"></script>
   <script>
     const treeEl = document.getElementById('tree');
+    const noteEl = document.getElementById('note');
     const linksEl = document.getElementById('links');
     const changesEl = document.getElementById('changes');
     let db = null;
@@ -91,6 +97,27 @@
       if (items.length) selectNote(items[0].path, treeEl.querySelector('li'));
     }
 
+    // ponytail: raw markdown in <pre> for OKF debug; disk is truth, index may lag; no renderer
+    async function loadNoteContent(path) {
+      const res = await fetch(path, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`Could not load ${path}`);
+      return await res.text();
+    }
+
+    async function renderNote(path) {
+      if (!path) {
+        noteEl.innerHTML = '<p class="meta">Select a note</p>';
+        return;
+      }
+      noteEl.innerHTML = '<p class="meta">Loading…</p>';
+      try {
+        const text = await loadNoteContent(path);
+        noteEl.innerHTML = `<pre class="note-body">${esc(text)}</pre>`;
+      } catch (err) {
+        noteEl.innerHTML = `<p class="err">${esc(err.message)}</p>`;
+      }
+    }
+
     function selectNote(path, li) {
       active = path;
       treeEl.querySelectorAll('li').forEach(n => n.classList.remove('active'));
@@ -110,6 +137,7 @@
         `<div class="edge">← ${esc(e.source)}${e.label ? ' <span class="meta">"' + esc(e.label) + '"</span>' : ''}</div>`
       ).join('') || '<p class="meta">No incoming links</p>';
       linksEl.innerHTML = `<p><strong>${esc(path)}</strong></p><h3>Outgoing</h3>${out}<h3>Incoming</h3>${inc}`;
+      renderNote(path);
     }
 
     function loadChanges() {
@@ -127,18 +155,25 @@
       loadChanges();
       if (active) {
         const li = treeEl.querySelector(`li[data-path="${CSS.escape(active)}"]`);
-        selectNote(active, li);
+        if (li) {
+          selectNote(active, li);
+        } else {
+          active = null;
+          noteEl.innerHTML = '<p class="meta">Select a note</p>';
+        }
       }
     }
 
     document.getElementById('refresh').addEventListener('click', () => {
       refresh().catch(err => {
         treeEl.innerHTML = `<li class="err">${esc(err)}</li>`;
+        noteEl.innerHTML = '<p class="meta">Select a note</p>';
       });
     });
 
     refresh().catch(err => {
       treeEl.innerHTML = `<li class="err">${esc(err)}</li>`;
+      noteEl.innerHTML = '<p class="meta">Select a note</p>';
     });
   </script>
 </body>
