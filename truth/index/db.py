@@ -1,4 +1,5 @@
 import sqlite3
+import threading
 from pathlib import Path
 
 import sqlite_vec
@@ -23,11 +24,11 @@ CREATE TABLE IF NOT EXISTS chunks (
 
 CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
   text,
-  tokenize='trigram'
+  tokenize='porter unicode61'
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS chunks_vec USING vec0(
-  embedding float[384]
+  embedding float[768]
 );
 
 CREATE TABLE IF NOT EXISTS events (
@@ -54,6 +55,9 @@ CREATE TABLE IF NOT EXISTS edges (
 CREATE INDEX IF NOT EXISTS edges_target ON edges(target);
 """
 
+_CONN: sqlite3.Connection | None = None
+_CONN_LOCK = threading.Lock()
+
 
 def open_db(path: Path | None = None) -> sqlite3.Connection:
     # ponytail: check_same_thread=False — watchdog Timer threads share this conn; serialize via watcher lock
@@ -65,6 +69,42 @@ def open_db(path: Path | None = None) -> sqlite3.Connection:
     return conn
 
 
+def _schema_stale(conn: sqlite3.Connection) -> bool:
+    rows = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE name IN ('chunks_vec', 'chunks_fts')"
+    ).fetchall()
+    for row in rows:
+        sql = row["sql"] or ""
+        if "float[384]" in sql or "trigram" in sql:
+            return True
+    return False
+
+
+def _drop_index_tables(conn: sqlite3.Connection) -> None:
+    # ponytail: drops index tables only; user must run `truth index` to rebuild chunks/vec/fts
+    conn.executescript(
+        """
+        DROP TABLE IF EXISTS chunks_fts;
+        DROP TABLE IF EXISTS chunks_vec;
+        DROP TABLE IF EXISTS chunks;
+        DROP TABLE IF EXISTS files;
+        """
+    )
+    conn.commit()
+
+
 def init_schema(conn: sqlite3.Connection) -> None:
+    if _schema_stale(conn):
+        _drop_index_tables(conn)
     conn.executescript(_SCHEMA)
     conn.commit()
+
+
+def get_db() -> sqlite3.Connection:
+    global _CONN
+    if _CONN is None:
+        with _CONN_LOCK:
+            if _CONN is None:
+                _CONN = open_db()
+                init_schema(_CONN)
+    return _CONN
