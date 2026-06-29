@@ -11,7 +11,7 @@ Truth builds on the OKF pattern: curated markdown concepts with cross-links, not
 
 Local hybrid search (vector + BM25 + RRF) is the standard pattern for small-to-medium personal knowledge bases. A watchdog-driven incremental indexer with content-hash skipping avoids re-embedding unchanged files.
 
-For the dashboard, a static HTML page served by Python's stdlib HTTP server with JSON API endpoints is sufficient for v1 — no SPA build pipeline needed.
+For observability, a CLI-first memory inspector (`tree`, `links`, `changes`, `graph --json`) covers most needs. Optional static HTML + JSON API for browser viewing — no SPA, no in-browser markdown editor for v1.
 
 ## Key Findings
 
@@ -37,15 +37,16 @@ For the dashboard, a static HTML page served by Python's stdlib HTTP server with
 - **Dual-write drift**: Agents must never write SQLite directly — only markdown
 - **Frontmatter corruption**: Validate on write, not just on read
 - **Embedding model first-run**: ~80MB download; document this in README
-- **Dashboard stale data**: Poll every few seconds or trigger refresh on watcher events
+- **Changelog reliability**: Use events table from watcher, not file mtime alone; also append OKF `log.md` on writes
 - **Link resolution**: Handle relative paths, missing targets, and `[[wiki]]` style if supported
 
 ## Roadmap Implications
 
 1. **Phase 1 before Phase 2** — graph extraction and frontmatter validation are prerequisites for index metadata
 2. **Phase 2 before Phase 4** — dashboard search depends on hybrid search API
-3. **Dashboard can parallel Phase 3** — only needs Phase 1+2, but sequential is simpler
-4. **CLI last** — integrates components that must exist first
+3. **Inspector after index** — needs events table (Phase 2) and link graph (Phase 1)
+4. **CLI `serve` last** — integrates watcher + optional static HTML inspector
+5. **Full dashboard deferred** — force graph, note viewer, live refresh are v2
 
 ---
 *Research synthesized: 2026-06-28*

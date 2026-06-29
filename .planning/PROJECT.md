@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Truth is a local-first agent memory system: OKF-compliant markdown files are the source of truth, a SQLite index provides fast hybrid search, and agents maintain the knowledge base via two tools (`memory_search`, `memory_write`). An HTML dashboard lets you browse the knowledge graph, read notes, and see what changed — all offline, no cloud, no SDK required to read the data.
+Truth is a local-first agent memory system: OKF-compliant markdown files are the source of truth, a SQLite index provides fast hybrid search, and agents maintain the knowledge base via two tools (`memory_search`, `memory_write`). A memory inspector — CLI first, optional static HTML in the browser — lets you see the file tree, link relationships, and changelog. All offline, no cloud, no SDK required to read the data.
 
 ## Core Value
 
@@ -12,16 +12,18 @@ Agents can read before they act and write after they learn, with human-readable 
 
 ### Validated
 
-(None yet — ship to validate)
+- OKF-compliant markdown store with enforced `type` frontmatter — **Validated in Phase 1**
+- Cross-links parseable for graph building (MEM-04) — **Validated in Phase 1**
+- Configurable `notes/` knowledge root — **Validated in Phase 1**
 
 ### Active
 
-- [ ] OKF-compliant markdown store with enforced `type` frontmatter
 - [ ] SQLite index with local embeddings and content-hash change detection
 - [ ] Hybrid search (vector + BM25 + RRF merge)
-- [ ] File watcher re-indexes only changed files
+- [ ] File watcher re-indexes only changed files; events table tracks create/update/delete
 - [ ] `memory_search` and `memory_write` agent tools
-- [ ] HTML dashboard to browse, navigate links, and view recent changes
+- [ ] OKF `log.md` appended on agent writes (human-readable changelog)
+- [ ] Memory inspector: CLI (`tree`, `links`, `changes`, `graph --json`) + optional static HTML page
 - [ ] Agent system prompt contract (search before answer, write after learn)
 
 ### Out of Scope
@@ -30,15 +32,17 @@ Agents can read before they act and write after they learn, with human-readable 
 - Ollama/LLM runtime itself — integrate via tools, don't embed a model server
 - Graph database — link graph built from markdown links at index time
 - Docker deployment — pip install and run
-- Mobile app — browser dashboard only for v1
+- Custom markdown editor / WYSIWYG — use existing editor (VS Code, Obsidian)
+- Full interactive dashboard — force-directed graphs, in-browser markdown viewer, live SSE (v2)
+- Mobile app — CLI + optional browser inspector for v1
 
 ## Context
 
-Google's Open Knowledge Format (OKF, June 2026) stores knowledge as markdown + YAML frontmatter with `type` as the only required field. Cross-links form a knowledge graph. This project is ~95% aligned already: markdown folders as truth, SQLite as derived index.
+Google's Open Knowledge Format (OKF, June 2026) stores knowledge as markdown + YAML frontmatter with `type` as the only required field. Cross-links form a knowledge graph. Optional `index.md` and `log.md` provide navigation and chronological history. This project is ~95% aligned already: markdown folders as truth, SQLite as derived index.
 
 Key architectural insight from vision doc: **never write to SQLite directly** — agents write markdown; the indexer keeps SQLite in sync. Andrej Karpathy's framing: LLMs don't forget cross-references or get bored updating 15 files.
 
-Embedding: local ONNX model (~80MB, CPU-only) via sentence-transformers — no Ollama needed for search. Examples: `all-MiniLM-L6-v2`, `nomic-embed-text-v1.5`.
+The inspector is observability for humans, not core to the agent loop. CLI commands cover 80% of the value; browser UI is optional polish on the same JSON API.
 
 Reference doc: `VISION.MD` in project root.
 
@@ -48,17 +52,19 @@ Reference doc: `VISION.MD` in project root.
 - **Local-only**: All data and embeddings stay on disk; no external API calls for core loop
 - **OKF compliance**: Every ingested/written file must have YAML frontmatter with at least `type`
 - **Simplicity**: Indexer target ~50–200 lines of core logic; avoid frameworks beyond what's needed
-- **Dashboard**: Static HTML + lightweight Python HTTP server (no React build step for v1)
+- **Inspector**: CLI-first; optional single static HTML page + JSON API (no React build step for v1)
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Markdown as truth, SQLite as index | OKF alignment; human-readable; agents write files not DB rows | — Pending |
+| Markdown as truth, SQLite as index | OKF alignment; human-readable; agents write files not DB rows | ✓ Phase 1 store layer |
 | Hybrid search (vector + BM25 + RRF) | Better recall than either alone; standard pattern for local RAG | — Pending |
-| HTML dashboard in v1 | User requested visualize/navigate memory and changes | — Pending |
+| Inspector-first, not dashboard | CLI + event log + optional static HTML; full dashboard deferred to v2 | ✓ Accepted 2026-06-28 |
+| Events table for changelog | File mtime alone misses deletes and is unreliable; watcher writes events | — Pending |
+| OKF `log.md` on write | Human-readable changelog with zero UI; agent-maintained per OKF convention | — Pending |
 | Local ONNX embeddings | Offline, no Ollama dependency for search | — Pending |
-| `notes/` as default knowledge root | Configurable path; matches vision doc structure | — Pending |
+| `notes/` as default knowledge root | Configurable path; matches vision doc structure | ✓ Phase 1 |
 
 ## Evolution
 
@@ -78,4 +84,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-28 after initialization*
+*Last updated: 2026-06-28 — Phase 1 complete (OKF memory store)*

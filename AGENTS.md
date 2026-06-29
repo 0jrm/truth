@@ -1,7 +1,7 @@
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**Truth** — Local-first OKF agent memory. Markdown files are truth; SQLite is the search index. Agents use `memory_search` / `memory_write`. HTML dashboard for browse, link navigation, and change tracking.
+**Truth** — Local-first OKF agent memory. Markdown files are truth; SQLite is the search index. Agents use `memory_search` / `memory_write`. Memory inspector (CLI + optional static HTML) for tree, links, and changelog.
 
 See `.planning/PROJECT.md` for full context.
 
@@ -15,8 +15,8 @@ See `.planning/PROJECT.md` for full context.
 - **Embeddings**: sentence-transformers (local ONNX, CPU)
 - **Watcher**: watchdog
 - **Search**: vector + BM25 + RRF
-- **Dashboard**: static HTML + Python HTTP server (stdlib or minimal deps)
-- **Format**: OKF markdown + YAML frontmatter
+- **Inspector**: CLI commands + optional static HTML + JSON API
+- **Format**: OKF markdown + YAML frontmatter + `log.md`
 
 <!-- GSD:stack-end -->
 
@@ -25,6 +25,7 @@ See `.planning/PROJECT.md` for full context.
 
 - Markdown files in `notes/` are the source of truth — never write to SQLite directly from agent code
 - Every memory file requires YAML frontmatter with at least `type`
+- Changelog: events table (machine) + `log.md` append on write (human)
 - Keep core indexer logic minimal; prefer stdlib where possible
 - Mark intentional shortcuts with `ponytail:` comments
 
@@ -34,19 +35,19 @@ See `.planning/PROJECT.md` for full context.
 ## Architecture
 
 ```
-notes/*.md  ──write──►  agent (memory_write)
+notes/*.md  ──write──►  agent (memory_write) ──► log.md
      ▲                        │
      │                        ▼
      └──watcher──►  indexer  ──►  memory.db (SQLite)
-                                       │
-                    memory_search ◄────┤
-                    dashboard API ◄────┘
-                         │
-                         ▼
-                    browser (HTML dashboard)
+                         │              │
+                         │         events table
+                         │              │
+              memory_search ◄───────────┤
+              truth tree/links/changes ◄┘
+              truth serve ──► inspector.html (optional)
 ```
 
-Build order: store → index → tools → dashboard → CLI
+Build order: store → index (+ events) → tools (+ log.md) → inspector → CLI
 
 <!-- GSD:architecture-end -->
 
@@ -62,7 +63,7 @@ No project-local skills yet.
 
 This project uses [Get Shit Done](https://github.com/gsd-build/get-shit-done) for phased execution.
 
-**Current phase:** 1 — OKF Memory Store
+**Current phase:** 2 — Hybrid Index
 **Roadmap:** `.planning/ROADMAP.md`
 **State:** `.planning/STATE.md`
 
