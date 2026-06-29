@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready_to_plan
-stopped_at: Phase 4 complete (2/2) — ready to discuss Phase 5
-last_updated: 2026-06-29T01:44:15.708Z
-last_activity: 2026-06-29 -- Phase 4 execution started
+status: planning
+stopped_at: Phase 5 context gathered
+last_updated: "2026-06-29T02:14:07.083Z"
+last_activity: 2026-06-28
 progress:
   total_phases: 5
   completed_phases: 4
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-28)
 
 **Core value:** Agents can read before they act and write after they learn, with human-readable markdown as the durable record and instant search over that record.
-**Current focus:** Phase 5 — integration
+**Current focus:** Phase 5 — integration (context gathered)
 
 ## Current Position
 
 Phase: 5
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-06-29
+Last activity: 2026-06-28
 
 Progress: [███████████████░░░░░] 75%
 
@@ -72,6 +72,7 @@ Recent decisions affecting current work:
 - Phase 2 context gathered (auto): hybrid index decisions locked in 02-CONTEXT.md
 - Phase 2 complete: hybrid index UAT passed (9/9)
 - Phase 3 discussed + planned: 2 plans (03-01..03-02)
+- Phase 5 context gathered: sql.js static inspector, headless truth serve, env-only config — see 05-CONTEXT.md
 
 ### Pending Todos
 
@@ -89,6 +90,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-29T01:18:00Z
-Stopped at: Phase 3 planned (2 plans) — ready to execute 03-01
-Resume file: .planning/phases/03-agent-tools/03-01-PLAN.md
+Last session: 2026-06-29T02:14:07.068Z
+Stopped at: Phase 5 context gathered
+Resume file: .planning/phases/05-integration/05-CONTEXT.md
