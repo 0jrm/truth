@@ -7,4 +7,8 @@ venv/
 dist/
 *.egg-info/
 .pytest_cache/
+.planning/
 memory.db
+notes/memory.db
+notes/inspector.html
+notes/vendor/
