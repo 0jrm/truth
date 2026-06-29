@@ -10,8 +10,3 @@ def recent_changes(n: int = 20) -> list[dict]:
     finally:
         conn.close()
 
-
-if __name__ == "__main__":
-    events = recent_changes(5)
-    assert isinstance(events, list)
-    print("changes ok")

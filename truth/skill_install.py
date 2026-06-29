@@ -67,19 +67,15 @@ def install_skill(
 
 
 def bundled_assets_present() -> bool:
-    """ponytail: quick check that wheel/sdist includes agent bundle files."""
+    """Quick check that wheel/sdist includes agent bundle files."""
     root = _bundled_root()
-    required = (
-        root / "truth-memory" / "SKILL.md",
-        root / "prompts" / "system.md",
-        root / "cursor" / "mcp.json.example",
-        root / "static" / "inspector.html",
-    )
-    # static lives under truth/static, not bundled — fix check
     static = Path(__file__).resolve().parent / "static" / "inspector.html"
-    return all(p.is_file() for p in (
-        root / "truth-memory" / "SKILL.md",
-        root / "prompts" / "system.md",
-        root / "cursor" / "mcp.json.example",
-        static,
-    ))
+    return all(
+        p.is_file()
+        for p in (
+            root / "truth-memory" / "SKILL.md",
+            root / "prompts" / "system.md",
+            root / "cursor" / "mcp.json.example",
+            static,
+        )
+    )

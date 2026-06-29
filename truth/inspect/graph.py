@@ -51,10 +51,3 @@ def build_graph(root: Path | None = None) -> dict:
 def graph_json(root: Path | None = None) -> str:
     return json.dumps(build_graph(root), indent=2)
 
-
-if __name__ == "__main__":
-    g = build_graph()
-    assert "nodes" in g and "edges" in g
-    parsed = json.loads(graph_json())
-    assert isinstance(parsed["nodes"], list)
-    print("graph ok")

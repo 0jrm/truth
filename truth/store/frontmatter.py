@@ -61,15 +61,3 @@ def parse_note_file(path: Path) -> ParsedNote:
     text = path.read_text(encoding="utf-8")
     return parse_note(text, path=path)
 
-
-if __name__ == "__main__":
-    sample = "---\ntype: Note\ntitle: test\n---\nBody.\n"
-    n = parse_note(sample)
-    assert n.meta["type"] == "Note" and n.body == "Body.\n"
-    assert validate_frontmatter({}, auto_type="Note")["type"] == "Note"
-    try:
-        validate_frontmatter({})
-        raise SystemExit("expected ValueError")
-    except ValueError:
-        pass
-    print("frontmatter ok")

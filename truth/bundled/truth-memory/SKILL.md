@@ -39,7 +39,7 @@ Expose tools to Cursor or Claude Code by running the stdio MCP server:
 truth mcp
 ```
 
-Install agent files into this project: `truth skill install` (writes `.cursor/skills/truth-memory/`, rule, and optional `mcp.json`).
+Run `truth skill install` to copy this skill, a Cursor rule, `prompts/system.md`, and `.cursor/mcp.json` into your project (`pip install truth-memory` first).
 
 The MCP server runs `index_all` and starts the file watcher on startup — do not also run `truth serve` on the same notes root.
 

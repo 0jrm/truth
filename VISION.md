@@ -47,7 +47,7 @@ Human observability (CLI inspector, optional browser export) sits beside this lo
 
 ## Agent tools
 
-Truth exposes three tools for function-calling LLMs (Ollama, OpenAI-compatible APIs, etc.). The system prompt in `prompts/system.md` defines the agent loop:
+Truth exposes three tools for function-calling LLMs (Ollama, OpenAI-compatible APIs, etc.). The system prompt in `truth/bundled/prompts/system.md` (installed to `prompts/system.md` via `truth skill install`) defines the agent loop:
 
 - **Search before answer** — call `memory_search` when the user asks about facts, preferences, past work, or project context.
 - **Write after learn** — call `memory_write` when you discover durable facts, decisions, or outcomes.
@@ -81,7 +81,7 @@ Wire these tools with `truth.tools.tool_schemas()` for OpenAI-compatible runtime
 
 ## Index and search
 
-The indexer walks `notes/`, chunks each markdown file, embeds chunks with a local ONNX model, and stores vectors plus text in SQLite via [sqlite-vec](https://github.com/asg017/sqlite-vec).
+The indexer walks `notes/`, chunks each markdown file, embeds chunks with a local sentence-transformers model, and stores vectors plus text in SQLite via [sqlite-vec](https://github.com/asg017/sqlite-vec).
 
 | Component | Detail |
 |---|---|

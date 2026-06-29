@@ -5,7 +5,9 @@ __pycache__/
 .venv/
 venv/
 dist/
+build/
 *.egg-info/
+.pause-autopilot
 .pytest_cache/
 .planning/
 memory.db

@@ -45,10 +45,3 @@ def format_tree(root: Path | None = None) -> str:
         lines.append(f"{indent}{item['path']}  [{item['type']}]  {item['title']}")
     return "\n".join(lines) + "\n"
 
-
-if __name__ == "__main__":
-    tree = build_tree()
-    assert isinstance(tree, list)
-    if tree:
-        assert "path" in tree[0] and "type" in tree[0]
-    print("tree ok")

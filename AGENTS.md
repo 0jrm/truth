@@ -12,7 +12,7 @@ See `.planning/PROJECT.md` for full context.
 
 - **Language**: Python 3.11+
 - **Index**: SQLite + sqlite-vec
-- **Embeddings**: sentence-transformers (local ONNX, CPU)
+- **Embeddings**: sentence-transformers (`nomic-ai/nomic-embed-text-v1.5`, local PyTorch on CPU)
 - **Watcher**: watchdog
 - **Search**: vector + BM25 + RRF
 - **Inspector**: CLI commands + optional static HTML + JSON API
@@ -54,7 +54,7 @@ Build order: store → index (+ events) → tools (+ log.md) → inspector → C
 <!-- GSD:skills-start source:skills/ -->
 ## Project Skills
 
-- **[truth-memory](skills/truth-memory/SKILL.md)** — search-before-answer / write-after-learn workflow via MCP (`memory_search`, `memory_write`, `memory_delete`). Use for project context, decisions, and durable notes in `notes/`.
+- **[truth-memory](truth/bundled/truth-memory/SKILL.md)** — search-before-answer / write-after-learn workflow via MCP (`memory_search`, `memory_write`, `memory_delete`). Use for project context, decisions, and durable notes in `notes/`. Canonical copy lives in `truth/bundled/`; run `truth skill install` in consumer projects.
 
 <!-- GSD:skills-end -->
 

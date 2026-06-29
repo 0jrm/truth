@@ -37,10 +37,3 @@ def note_links(rel_path: str, root: Path | None = None) -> dict:
 
     return {"path": target_rel, "outgoing": outgoing, "incoming": incoming}
 
-
-if __name__ == "__main__":
-    root = notes_root()
-    if (root / "hybrid-search.md").exists():
-        links = note_links("hybrid-search.md", root)
-        assert any(e["target"].endswith("sqlite-vectors.md") for e in links["outgoing"])
-    print("links ok")

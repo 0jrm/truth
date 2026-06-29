@@ -1,0 +1,1 @@
+../../../truth/bundled/truth-memory/SKILL.md

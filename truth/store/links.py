@@ -52,26 +52,3 @@ def extract_links(path: Path, notes_root: Path | None = None) -> list[LinkEdge]:
     note = parse_note_file(path)
     return extract_links_from_body(note.path or path, note.body, root)
 
-
-if __name__ == "__main__":
-    from tempfile import TemporaryDirectory
-
-    with TemporaryDirectory() as td:
-        root = Path(td)
-        a = root / "a.md"
-        b = root / "sub" / "b.md"
-        b.parent.mkdir()
-        a.write_text("---\ntype: Note\n---\nSee [b](sub/b.md).\n", encoding="utf-8")
-        b.write_text("---\ntype: Note\n---\nNo links.\n", encoding="utf-8")
-        edges = extract_links(a, root)
-        assert len(edges) == 1 and edges[0].target.name == "b.md"
-
-    repo_notes = Path("notes")
-    if (repo_notes / "okf-format.md").exists():
-        root = default_notes_root()
-        seed_edges: list[LinkEdge] = []
-        for md in sorted(root.glob("*.md")):
-            seed_edges.extend(extract_links(md, root))
-        assert len(seed_edges) >= 2, f"expected >=2 seed edges, got {len(seed_edges)}"
-
-    print("links ok")

@@ -131,8 +131,3 @@ def memory_search(
         )
     return results
 
-
-if __name__ == "__main__":
-    hits = memory_search("hybrid BM25 vector", k=3)
-    for hit in hits:
-        print(hit["path"], f"score={hit['score']:.4f}")

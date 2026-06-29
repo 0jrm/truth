@@ -33,7 +33,7 @@ Hybrid vector + keyword search over your notes. A file watcher keeps the index c
 
 **Solo builders and indie hackers** — Your AI assistant finally has memory that survives between sessions and belongs to you. Every fact it learns lives in a markdown file in your git repo. No subscription, no account, no cloud.
 
-**Privacy-conscious users** — All data and embeddings stay on your machine. Truth uses a local embedding model (`nomic-ai/nomic-embed-text-v1.5` via ONNX on CPU). Nothing leaves your disk — not even for search.
+**Privacy-conscious users** — All data and embeddings stay on your machine. Truth uses a local embedding model (`nomic-ai/nomic-embed-text-v1.5` via sentence-transformers / PyTorch on CPU). Nothing leaves your disk — not even for search.
 
 ## Install
 
@@ -75,13 +75,7 @@ pip install -e ".[test]"
 pytest
 ```
 
-Manual regression gates (also run by pytest wrappers):
-
-```bash
-python -m truth.index.search_quality   # search_quality=ok
-python -m truth.tools.agent_api_check    # agent_api_check=ok
-python -m truth.smoke                    # smoke ok
-```
+Regression coverage includes search quality (5-note rank-1), agent API filters/overwrite/delete, watcher concurrency, and an end-to-end smoke pipeline — all via `pytest`.
 
 ## Quick start
 
@@ -138,13 +132,6 @@ truth index
 
 On first open, an existing database auto-migrates index tables (drops old chunks/vec/fts) via `init_schema`, but you still must run `truth index` to rebuild embeddings.
 
-Optional sanity check after re-indexing:
-
-```bash
-python -m truth.index.search_quality
-# search_quality=ok
-```
-
 ## Browser inspector
 
 Export the static inspector into your notes folder (beside `memory.db`):
@@ -200,7 +187,7 @@ Draft content not meant for agent search.
 
 ## Wiring to an agent (Ollama / any function-calling LLM)
 
-**System prompt** — copy from `prompts/system.md`, or paste this:
+**System prompt** — install with `truth skill install` (writes `prompts/system.md`), or copy from `truth/bundled/prompts/system.md`, or paste this:
 
 ```
 You have persistent memory stored as OKF markdown files on disk.
@@ -297,7 +284,7 @@ claude mcp add truth -- truth mcp
 
 On startup the MCP server runs `index_all` and starts the file watcher (same bootstrap as `truth serve`). Do not run a second `truth serve` on the same notes root — one watcher per notes directory.
 
-Agent workflow (search-before-answer, write-after-learn): see [skills/truth-memory/SKILL.md](skills/truth-memory/SKILL.md).
+Agent workflow (search-before-answer, write-after-learn): install with `truth skill install` or see [truth/bundled/truth-memory/SKILL.md](truth/bundled/truth-memory/SKILL.md).
 
 ## Project structure
 
@@ -308,7 +295,7 @@ truth/
 └── tools/          # memory_search, memory_write, tool_schemas (agent API)
 
 notes/              # your markdown knowledge base (source of truth)
-prompts/system.md   # copy-paste agent system prompt
+truth/bundled/      # canonical agent skill, rule, prompt (installed via truth skill install)
 notes/memory.db     # generated — do not commit
 notes/inspector.html  # optional — from truth export
 ```
@@ -317,7 +304,7 @@ notes/inspector.html  # optional — from truth export
 
 - Python 3.11+
 - [sqlite-vec](https://github.com/asg017/sqlite-vec) — vector search in SQLite
-- [sentence-transformers](https://www.sbert.net/) — local ONNX embeddings (`nomic-ai/nomic-embed-text-v1.5`, 768-dim)
+- [sentence-transformers](https://www.sbert.net/) — local PyTorch embeddings (`nomic-ai/nomic-embed-text-v1.5`, 768-dim)
 - [watchdog](https://github.com/gorakhargosh/watchdog) — file system events
 - Search: vector + BM25 (FTS5 porter unicode61) + Reciprocal Rank Fusion
 

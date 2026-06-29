@@ -1,5 +1,5 @@
 {
-  "goalsPath": "./goals.md",
+  "goalsPath": "./.planning/STATE.md",
   "verbose": true,
   "logLevel": "info",
   "workspaceRoot": ".",

@@ -1,13 +1,8 @@
 from __future__ import annotations
 
-import os
-import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from truth.index.db import init_schema, open_db
-from truth.index.indexer import index_file
-from truth.index.search import memory_search
 from truth.store.frontmatter import format_note, split_frontmatter, validate_frontmatter
 from truth.store.paths import notes_root
 
@@ -87,34 +82,3 @@ def memory_write(
 
     return {"path": rel, "previous": previous}
 
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory() as tmp:
-        os.environ["TRUTH_NOTES_ROOT"] = tmp
-        os.environ["TRUTH_DB_PATH"] = str(Path(tmp) / "memory.db")
-
-        created = memory_write("selfcheck/findme.md", "Unique ponytail selfcheck phrase xyz.")
-        assert created["previous"] is None
-        written = notes_root() / created["path"]
-        assert written.exists()
-
-        conn = open_db()
-        init_schema(conn)
-        index_file(conn, written, notes_root())
-
-        hits = memory_search("ponytail selfcheck phrase", k=3)
-        assert any("ponytail selfcheck phrase" in h.get("text", "") for h in hits), hits
-
-        overwritten = memory_write(
-            "selfcheck/findme.md", "Revised ponytail selfcheck phrase xyz."
-        )
-        assert overwritten["previous"] is not None
-        assert "Unique ponytail selfcheck phrase" in overwritten["previous"]
-
-        try:
-            memory_write("../etc/passwd", "nope")
-            raise SystemExit("expected ValueError for traversal")
-        except ValueError:
-            pass
-
-    print("ok")

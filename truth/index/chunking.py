@@ -56,15 +56,3 @@ def _split_long(text: str, target: int, overlap: int) -> list[str]:
     return out
 
 
-def assert_overlap_preserves_paragraph_boundary() -> None:
-    p1 = "A" * 40
-    p2 = "B" * 40
-    body = f"{p1}\n\n{p2}"
-    chunks = chunk_text(body, target=50, overlap=20)
-    assert len(chunks) >= 2, chunks
-    assert any("\n\n" in c and "A" in c and "B" in c for c in chunks[1:]), chunks
-
-
-if __name__ == "__main__":
-    assert_overlap_preserves_paragraph_boundary()
-    print("ok")

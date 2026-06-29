@@ -28,10 +28,3 @@ def embed_texts(texts: list[str], *, query: bool = False) -> list[list[float]]:
     vectors = get_model().encode(prefixed, normalize_embeddings=True)
     return vectors.tolist()
 
-
-if __name__ == "__main__":
-    doc_vec = embed_texts(["hello world"])[0]
-    query_vec = embed_texts(["hello"], query=True)[0]
-    assert len(doc_vec) == 768, len(doc_vec)
-    assert len(query_vec) == 768, len(query_vec)
-    print("ok")
