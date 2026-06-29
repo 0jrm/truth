@@ -23,6 +23,21 @@ pip install -e .
 
 The first index run downloads the embedding model (~550MB one-time for nomic-embed-text-v1.5, stays local).
 
+## Tests
+
+```bash
+pip install -e ".[test]"
+pytest
+```
+
+Manual regression gates (also run by pytest wrappers):
+
+```bash
+python -m truth.index.search_quality   # search_quality=ok
+python -m truth.tools.agent_api_check    # agent_api_check=ok
+python -m truth.smoke                    # smoke ok
+```
+
 ## Quick start
 
 **1. Index your notes**
