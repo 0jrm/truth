@@ -32,11 +32,12 @@
 
     <div class="links">
       <a href="https://github.com/0jrm/truth">GitHub</a>
-      <a href="https://pypi.org/project/truth-source/">PyPI</a>
+      <a href="https://pypi.org/project/truth-memory/">PyPI</a>
       <a href="https://github.com/0jrm/truth/blob/master/README.md">Full docs</a>
     </div>
 
-    <pre><code>pip install truth-source
+    <pre><code>pip install truth-memory
+truth skill install
 truth index
 truth serve</code></pre>
 
@@ -55,7 +56,7 @@ truth serve</code></pre>
       <ul>
         <li><strong>memory_search</strong> — hybrid vector + BM25 (RRF), optional type/tags filters</li>
         <li><strong>memory_write</strong> — OKF markdown with YAML frontmatter + changelog</li>
-        <li><strong>memory_delete</strong> — remove notes; watcher cleans the index</li>
+        <li><strong>memory_delete</strong> — remove notes; index rows dropped eagerly</li>
       </ul>
     </section>
 

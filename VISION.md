@@ -41,7 +41,7 @@ notes/*.md  ──► agent (memory_write) ──► log.md
 
 **Read path:** An agent calls `memory_search`. The query is embedded locally, run through vector search and BM25 keyword search, merged with Reciprocal Rank Fusion (RRF), and top-k chunks are returned with path and score.
 
-**Delete path:** An agent calls `memory_delete`. The file is removed from disk; the watcher cleans up index rows on the next pass.
+**Delete path:** An agent calls `memory_delete`. The file is removed from disk and index rows are dropped immediately (watcher also cleans up if running).
 
 Human observability (CLI inspector, optional browser export) sits beside this loop — useful for debugging and browsing, not required for the agent to function.
 

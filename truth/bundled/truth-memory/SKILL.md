@@ -39,9 +39,7 @@ Expose tools to Cursor or Claude Code by running the stdio MCP server:
 truth mcp
 ```
 
-Run `truth skill install` to copy this skill, a Cursor rule, `prompts/system.md`, and `.cursor/mcp.json` into your project (pip install `truth-memory` first).
-
-See [README.md](../../README.md#mcp-cursor--claude-code) for manual `.cursor/mcp.json` and `claude mcp add` setup.
+Install agent files into this project: `truth skill install` (writes `.cursor/skills/truth-memory/`, rule, and optional `mcp.json`).
 
 The MCP server runs `index_all` and starts the file watcher on startup — do not also run `truth serve` on the same notes root.
 
@@ -56,4 +54,4 @@ Run `truth index` once before first MCP use (downloads embedding model on first 
 
 ## Canonical prompt
 
-Full tool contract and example flows: [prompts/system.md](../../prompts/system.md)
+Full tool contract: `prompts/system.md` (installed by `truth skill install`).

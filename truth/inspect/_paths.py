@@ -12,8 +12,10 @@ def resolve_note_path(rel: str, root: Path | None = None) -> Path:
     if rel.startswith(f"{base_name}/"):
         rel = rel[len(base_name) + 1 :]
     target = (base / rel).resolve()
-    if not str(target).startswith(str(base)):
-        raise ValueError(f"path escapes notes root: {rel}")
+    try:
+        target.relative_to(base)
+    except ValueError as exc:
+        raise ValueError(f"path escapes notes root: {rel}") from exc
     if target.suffix != ".md":
         raise ValueError(f"not a markdown note: {rel}")
     return target

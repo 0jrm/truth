@@ -11,7 +11,7 @@ from truth.tools.write import _safe_note_path, memory_write
 
 
 def memory_delete(path: str) -> dict:
-    """Remove OKF markdown under notes_root. Watcher cleans index; no SQLite writes here."""
+    """Remove OKF markdown under notes_root and eagerly drop index rows."""
     root = notes_root()
     target = _safe_note_path(path, root)
     rel = str(target.resolve().relative_to(root.resolve()))
@@ -22,6 +22,9 @@ def memory_delete(path: str) -> dict:
     if not target.exists():
         raise FileNotFoundError(f"note not found: {rel}")
 
+    conn = open_db()
+    init_schema(conn)
+    delete_file_from_index(conn, target, root)
     target.unlink()
     return {"path": rel, "deleted": True}
 
@@ -47,7 +50,6 @@ if __name__ == "__main__":
         assert result == {"path": "delete-me.md", "deleted": True}
         assert not (root / "delete-me.md").exists()
 
-        delete_file_from_index(conn, root / "delete-me.md", root)
         count = conn.execute(
             "SELECT COUNT(*) FROM chunks WHERE path='delete-me.md'"
         ).fetchone()[0]

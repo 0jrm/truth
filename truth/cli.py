@@ -80,6 +80,23 @@ def _cmd_export(_args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_skill_install(args: argparse.Namespace) -> int:
+    from truth.skill_install import install_skill
+
+    written = install_skill(
+        target=Path(args.directory) if args.directory else None,
+        personal=args.personal,
+        force=args.force,
+        mcp=not args.no_mcp,
+    )
+    if not written:
+        print("nothing to install (files exist; use --force to overwrite)")
+        return 0
+    for path in written:
+        print(f"installed {path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="truth", description="Truth memory inspector")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -100,6 +117,29 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("index", help="One-shot full reindex")
     sub.add_parser("export", help="Copy static browser inspector into notes root")
 
+    p_skill = sub.add_parser("skill", help="Install truth-memory agent skill for Cursor")
+    skill_sub = p_skill.add_subparsers(dest="skill_command", required=True)
+    p_install = skill_sub.add_parser("install", help="Copy skill, rule, prompt, and MCP config")
+    p_install.add_argument(
+        "--directory",
+        help="Project root (default: current directory)",
+    )
+    p_install.add_argument(
+        "--personal",
+        action="store_true",
+        help="Install skill to ~/.cursor/skills/ only (no rule or mcp.json)",
+    )
+    p_install.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite existing skill/rule/prompt files",
+    )
+    p_install.add_argument(
+        "--no-mcp",
+        action="store_true",
+        help="Do not create .cursor/mcp.json",
+    )
+
     args = parser.parse_args(argv)
     handlers = {
         "tree": _cmd_tree,
@@ -111,6 +151,8 @@ def main(argv: list[str] | None = None) -> int:
         "index": _cmd_index,
         "export": _cmd_export,
     }
+    if args.command == "skill":
+        return _cmd_skill_install(args)
     try:
         return handlers[args.command](args)
     except ValueError as exc:

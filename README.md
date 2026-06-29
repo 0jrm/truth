@@ -20,7 +20,7 @@ notes/*.md  ──► agent (memory_write) ──► log.md
 ## Install
 
 ```bash
-pip install truth-source
+pip install truth-memory
 ```
 
 For development:
@@ -32,6 +32,23 @@ pip install -e ".[test]"
 ```
 
 The first index run downloads the embedding model (~550MB one-time for nomic-embed-text-v1.5, stays local).
+
+### Agent skill (Cursor)
+
+After installing the package, wire the **truth-memory** skill into your project:
+
+```bash
+truth skill install
+```
+
+This writes:
+
+- `.cursor/skills/truth-memory/SKILL.md` — search-before-answer / write-after-learn workflow
+- `.cursor/rules/truth-memory.mdc` — always-on rule pointing at the skill
+- `prompts/system.md` — full tool contract for other runtimes
+- `.cursor/mcp.json` — MCP server config (only if missing)
+
+Use `--personal` to install the skill globally under `~/.cursor/skills/`. Use `--force` to overwrite existing files.
 
 ## Tests
 
@@ -224,7 +241,7 @@ The watcher re-indexes writes within ~500ms. The agent's next `memory_search` wi
 
 Expose `memory_search`, `memory_write`, and `memory_delete` to Cursor or Claude Code via stdio MCP.
 
-**Prerequisites:** `pip install -e .` and a one-time `truth index` (downloads the embedding model on first run).
+**Prerequisites:** `pip install truth-memory` and a one-time `truth index` (downloads the embedding model on first run). Run `truth skill install` to add the agent skill and MCP config to your project.
 
 **Spawn command:**
 

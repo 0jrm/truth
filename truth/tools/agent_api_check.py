@@ -11,7 +11,7 @@ from pathlib import Path
 
 def run_agent_api_check() -> None:
     import truth.index.db as db_module
-    from truth.index.indexer import delete_file_from_index, index_all
+    from truth.index.indexer import index_all
     from truth.index.search import memory_search
     from truth.store.frontmatter import format_note
     from truth.tools.delete import memory_delete
@@ -60,7 +60,6 @@ def run_agent_api_check() -> None:
         from truth.index.db import open_db
 
         conn = open_db()
-        delete_file_from_index(conn, tmp_path / "overwrite/test.md", tmp_path)
         count = conn.execute(
             "SELECT COUNT(*) FROM chunks WHERE path='overwrite/test.md'"
         ).fetchone()[0]

@@ -61,9 +61,12 @@ _CONN_LOCK = threading.Lock()
 
 
 def open_db(path: Path | None = None) -> sqlite3.Connection:
-    # ponytail: check_same_thread=False — watcher writer thread owns conn; Timer threads only enqueue
-    conn = sqlite3.connect(path or db_path(), check_same_thread=False)
+    # ponytail: check_same_thread=False + WAL — singleton get_db() and watcher writer may share DB
+    conn = sqlite3.connect(
+        path or db_path(), check_same_thread=False, isolation_level=None
+    )
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
     conn.enable_load_extension(True)
     sqlite_vec.load(conn)
     conn.enable_load_extension(False)
