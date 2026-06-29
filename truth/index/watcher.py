@@ -1,3 +1,4 @@
+import logging
 import queue
 import threading
 import time
@@ -12,6 +13,8 @@ from .db import init_schema, open_db
 from .indexer import delete_file_from_index, index_file
 
 _DEBOUNCE_SEC = 0.5
+_QUEUE_MAX = 500
+_LOG = logging.getLogger(__name__)
 
 
 class _DebouncedIndexer(FileSystemEventHandler):
@@ -19,9 +22,15 @@ class _DebouncedIndexer(FileSystemEventHandler):
         self._notes = notes
         self._timers: dict[str, threading.Timer] = {}
         self._lock = threading.Lock()
-        self._queue: queue.Queue = queue.Queue()
+        self._queue: queue.Queue = queue.Queue(maxsize=_QUEUE_MAX)
         self._writer = threading.Thread(target=self._writer_loop, daemon=True)
         self._writer.start()
+
+    def _enqueue(self, item: tuple[str, Path]) -> None:
+        depth = self._queue.qsize()
+        if depth >= 100:
+            _LOG.warning("watcher queue depth=%s (max=%s)", depth, _QUEUE_MAX)
+        self._queue.put(item)
 
     def _writer_loop(self) -> None:
         conn = open_db()
@@ -32,6 +41,9 @@ class _DebouncedIndexer(FileSystemEventHandler):
                 index_file(conn, path, self._notes)
             elif kind == "delete":
                 delete_file_from_index(conn, path, self._notes)
+            depth = self._queue.qsize()
+            if depth:
+                _LOG.info("watcher queue depth=%s", depth)
 
     def _schedule(self, key: str, fn) -> None:
         with self._lock:
@@ -61,7 +73,7 @@ class _DebouncedIndexer(FileSystemEventHandler):
         key = str(path)
 
         def _index() -> None:
-            self._queue.put(("index", path))
+            self._enqueue(("index", path))
 
         self._schedule(key, _index)
 
@@ -77,7 +89,7 @@ class _DebouncedIndexer(FileSystemEventHandler):
         key = str(path)
 
         def _delete() -> None:
-            self._queue.put(("delete", path))
+            self._enqueue(("delete", path))
 
         self._schedule(key, _delete)
 

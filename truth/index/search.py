@@ -93,7 +93,11 @@ def memory_search(
 ) -> list[dict]:
     conn = get_db()
     allowed = _filtered_paths(conn, type, tags)
-    fetch_k = min(100, max(k * 10, k))
+    if allowed is None:
+        fetch_k = min(100, k * 10)
+    else:
+        # ponytail: over-fetch when post-merge filter is active; tune multiplier vs corpus size
+        fetch_k = min(500, max(k * 20, len(allowed) * 2))
 
     query_vec = embed_texts([query], query=True)[0]
     fts_ranks = _fts_search(conn, query, limit=fetch_k)

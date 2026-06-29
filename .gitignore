@@ -12,3 +12,9 @@ memory.db
 notes/memory.db
 notes/inspector.html
 notes/vendor/
+# Windows NTFS alternate data stream metadata
+*:Zone.Identifier
+# GSD autopilot session log (local orchestrator state)
+session-log.jsonl
+# Local Cursor MCP config (machine-specific paths)
+.cursor/mcp.json

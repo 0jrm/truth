@@ -2,6 +2,8 @@
 
 Local-first OKF agent memory. Markdown files are truth; SQLite is the search index.
 
+**Repository:** [github.com/0jrm/truth](https://github.com/0jrm/truth) · **Docs site:** [GitHub Pages](https://0jrm.github.io/truth/) (enable Pages → `/docs` folder on `master`)
+
 ## What it is
 
 Truth gives an AI agent persistent memory: it writes what it learns as OKF-compliant markdown, searches it before answering, and the index stays current automatically. No cloud, no Docker, no graph database — one `memory.db` file alongside your notes.
@@ -18,7 +20,15 @@ notes/*.md  ──► agent (memory_write) ──► log.md
 ## Install
 
 ```bash
-pip install -e .
+pip install truth-source
+```
+
+For development:
+
+```bash
+git clone https://github.com/0jrm/truth.git
+cd truth
+pip install -e ".[test]"
 ```
 
 The first index run downloads the embedding model (~550MB one-time for nomic-embed-text-v1.5, stays local).
@@ -141,6 +151,18 @@ Body content here. Link to [another concept](other.md).
 
 `memory_write` enforces this automatically. Files missing `type` are skipped by the indexer with a warning.
 
+**Indexing exclusions:** `log.md` is never semantically indexed (changelog only). Files with `skip_index: true` in frontmatter are tracked in the file tree but excluded from chunk/vector/FTS indexing:
+
+```markdown
+---
+type: Note
+title: "Scratch pad"
+skip_index: true
+---
+
+Draft content not meant for agent search.
+```
+
 ## Wiring to an agent (Ollama / any function-calling LLM)
 
 **System prompt** — copy from `prompts/system.md`, or paste this:
@@ -210,7 +232,7 @@ Expose `memory_search`, `memory_write`, and `memory_delete` to Cursor or Claude 
 truth mcp
 ```
 
-**Cursor** — add to `.cursor/mcp.json`:
+**Cursor** — copy `.cursor/mcp.json.example` to `.cursor/mcp.json` (or add directly):
 
 ```json
 {

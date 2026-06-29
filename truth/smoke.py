@@ -9,14 +9,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-# ponytail: running as truth/smoke.py puts truth/ on sys.path and shadows stdlib inspect
-_REPO = Path(__file__).resolve().parents[1]
-if str(_REPO) not in sys.path:
-    sys.path.insert(0, str(_REPO))
-_script_dir = str(Path(__file__).resolve().parent)
-sys.path[:] = [p for p in sys.path if p != _script_dir]
-
-
 def main() -> int:
     repo = Path(__file__).resolve().parents[1]
     with tempfile.TemporaryDirectory() as td:

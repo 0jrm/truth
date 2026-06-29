@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-import truth.index.db as db_module
+from truth.index.db import reset_db_singleton
 
 
 @pytest.fixture
@@ -16,13 +16,12 @@ def isolated_truth():
     """Temp notes root + DB path; resets db singleton for function scope."""
     orig_notes = os.environ.get("TRUTH_NOTES_ROOT")
     orig_db = os.environ.get("TRUTH_DB_PATH")
-    orig_conn = db_module._CONN
 
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
         os.environ["TRUTH_NOTES_ROOT"] = str(tmp_path)
         os.environ["TRUTH_DB_PATH"] = str(tmp_path / "memory.db")
-        db_module._CONN = None
+        reset_db_singleton()
         yield tmp_path
 
     if orig_notes is None:
@@ -33,4 +32,4 @@ def isolated_truth():
         os.environ.pop("TRUTH_DB_PATH", None)
     else:
         os.environ["TRUTH_DB_PATH"] = orig_db
-    db_module._CONN = orig_conn
+    reset_db_singleton()

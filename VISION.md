@@ -114,13 +114,14 @@ These tools help you see what the agent wrote, trace link relationships, and rev
 
 ## What's next
 
-Current milestone work (v1.1) focuses on quality and completeness:
+v1.1 shipped (Phases 1–11): OKF store, hybrid index, agent tools with delete/filters, CLI inspector, MCP server, and browser export.
 
-- **Phase 9 (in progress)** — rewrite this vision doc; consolidate regression tests into pytest (`tests/test_search_quality.py`, chunker boundary, delete/filter integration)
-- **Phase 10** — inspector note viewer, in-browser search, live refresh after index updates
-- **Phase 11** — MCP stdio server exposing Truth tools + project skill for agent runtimes
+Backlog for a future milestone:
 
-Phases 1–8 shipped the OKF store, hybrid index, agent tools (including delete and search filters), CLI inspector, and integration CLI (`truth index`, `truth serve`, `truth export`).
+- PyPI release cadence and versioned migrations
+- Optional log.md rotation
+- Non-English FTS tokenizer options for large corpora
+- Tuning knobs for chunk size and RRF depth at 10k+ notes
 
 ## Philosophy
 

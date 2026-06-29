@@ -110,6 +110,15 @@ def init_schema(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+def reset_db_singleton() -> None:
+    """Close and clear the process-wide singleton (tests only)."""
+    global _CONN
+    with _CONN_LOCK:
+        if _CONN is not None:
+            _CONN.close()
+            _CONN = None
+
+
 def get_db() -> sqlite3.Connection:
     global _CONN
     if _CONN is None:

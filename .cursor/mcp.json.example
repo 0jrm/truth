@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "truth": {
+      "command": "truth",
+      "args": ["mcp"]
+    }
+  }
+}

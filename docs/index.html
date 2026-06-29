@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Truth — Local-first OKF agent memory</title>
+  <meta name="description" content="Markdown files are truth; SQLite is the search index. Hybrid vector + BM25 search for AI agents.">
+  <style>
+    :root { --bg: #0f1419; --fg: #e7ecf3; --muted: #8b9cb3; --accent: #5eb1ff; --card: #1a2332; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; background: var(--bg); color: var(--fg); line-height: 1.6; margin: 0; }
+    main { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+    h1 { font-size: 2rem; font-weight: 650; margin: 0 0 0.5rem; letter-spacing: -0.02em; }
+    .tagline { color: var(--muted); font-size: 1.125rem; margin-bottom: 2rem; }
+    a { color: var(--accent); }
+    pre { background: var(--card); border-radius: 8px; padding: 1rem 1.25rem; overflow-x: auto; font-size: 0.9rem; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .links { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1.5rem 0 2rem; }
+    .links a { text-decoration: none; padding: 0.5rem 1rem; background: var(--card); border-radius: 6px; }
+    .links a:hover { background: #243044; }
+    section { margin-top: 2rem; }
+    h2 { font-size: 1.15rem; margin-bottom: 0.75rem; }
+    ul { padding-left: 1.25rem; color: var(--muted); }
+    ul strong { color: var(--fg); }
+    .diagram { background: var(--card); border-radius: 8px; padding: 1rem 1.25rem; font-family: ui-monospace, monospace; font-size: 0.8rem; white-space: pre; overflow-x: auto; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Truth</h1>
+    <p class="tagline">Local-first OKF agent memory. Markdown is truth; SQLite is the search index.</p>
+
+    <div class="links">
+      <a href="https://github.com/0jrm/truth">GitHub</a>
+      <a href="https://pypi.org/project/truth-source/">PyPI</a>
+      <a href="https://github.com/0jrm/truth/blob/master/README.md">Full docs</a>
+    </div>
+
+    <pre><code>pip install truth-source
+truth index
+truth serve</code></pre>
+
+    <section>
+      <h2>Architecture</h2>
+      <div class="diagram">notes/*.md  ──► agent (memory_write) ──► log.md
+     ▲                  │
+     │                  ▼
+     └── watcher ──► indexer ──► memory.db (SQLite)
+                                      │
+                    memory_search ◄───┘</div>
+    </section>
+
+    <section>
+      <h2>Agent tools</h2>
+      <ul>
+        <li><strong>memory_search</strong> — hybrid vector + BM25 (RRF), optional type/tags filters</li>
+        <li><strong>memory_write</strong> — OKF markdown with YAML frontmatter + changelog</li>
+        <li><strong>memory_delete</strong> — remove notes; watcher cleans the index</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Stack</h2>
+      <ul>
+        <li>Python 3.11+ · sqlite-vec · sentence-transformers (local ONNX)</li>
+        <li>watchdog file watcher · MCP stdio server for Cursor / Claude Code</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
