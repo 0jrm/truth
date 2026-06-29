@@ -1,12 +1,20 @@
-# Truth
+# Truth — local-first, OKF-native memory for AI agents
 
-Local-first OKF agent memory. Markdown files are truth; SQLite is the search index.
+> Give your AI agent a memory it owns. No cloud, no Docker, no graph database — just a folder of markdown files and one pip install.
 
-**Repository:** [github.com/0jrm/truth](https://github.com/0jrm/truth) · **Docs site:** [GitHub Pages](https://0jrm.github.io/truth/) (enable Pages → `/docs` folder on `master`)
+**Repository:** [github.com/0jrm/truth](https://github.com/0jrm/truth) · **PyPI:** [truth-memory](https://pypi.org/project/truth-memory/) · **Docs:** [GitHub Pages](https://0jrm.github.io/truth/)
 
-## What it is
+In June 2026, Google standardized **[OKF](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)** (Open Knowledge Format) — agent-readable markdown with YAML frontmatter and cross-links. Truth is the first local-first, OKF-native memory store built for coding agents: markdown is truth, SQLite is a rebuildable search index.
 
-Truth gives an AI agent persistent memory: it writes what it learns as OKF-compliant markdown, searches it before answering, and the index stays current automatically. No cloud, no Docker, no graph database — one `memory.db` file alongside your notes.
+## The problem
+
+Every conversation with an AI starts from zero. You explain your project stack again. You re-share the decision you made last week. You paste in context the agent should already know.
+
+The usual fixes — Mem0, Cognee, LocalRecall — often mean Docker, accounts, or multi-service setups. They solve forgetting by adding infrastructure.
+
+Truth inverts that. The agent's memory is a folder of markdown files in OKF format. Read every note in any text editor. `git commit` it. Search it with `grep`. When the agent learns something, it writes a file. When it needs to remember, it searches. The index is SQLite — one `memory.db` file beside your notes, rebuildable anytime, never authoritative.
+
+## How it works
 
 ```
 notes/*.md  ──► agent (memory_write) ──► log.md
@@ -16,6 +24,16 @@ notes/*.md  ──► agent (memory_write) ──► log.md
                                       │
                     memory_search ◄───┘
 ```
+
+Hybrid vector + keyword search over your notes. A file watcher keeps the index current as the agent (or you) writes. Lose `memory.db`? Run `truth index` to rebuild from markdown.
+
+## Who it's for
+
+**Developers using Cursor or Claude Code** — Truth is a persistent memory layer for your coding agent. It remembers architecture decisions, team naming conventions, and why you chose that library. Point it at your `notes/` folder and your agent stops asking the same questions.
+
+**Solo builders and indie hackers** — Your AI assistant finally has memory that survives between sessions and belongs to you. Every fact it learns lives in a markdown file in your git repo. No subscription, no account, no cloud.
+
+**Privacy-conscious users** — All data and embeddings stay on your machine. Truth uses a local embedding model (`nomic-ai/nomic-embed-text-v1.5` via ONNX on CPU). Nothing leaves your disk — not even for search.
 
 ## Install
 
