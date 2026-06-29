@@ -8,7 +8,7 @@ Build a local OKF-compliant agent memory system in five coarse phases: establish
 
 - [x] **Phase 1: OKF Memory Store** — Markdown truth layer with frontmatter enforcement (completed 2026-06-29)
 - [x] **Phase 2: Hybrid Index** — SQLite + embeddings + watcher + search + events table (completed 2026-06-29)
-- [ ] **Phase 3: Agent Tools** — `memory_search`, `memory_write`, OKF `log.md` append
+- [x] **Phase 3: Agent Tools** — `memory_search`, `memory_write`, OKF `log.md` append (completed 2026-06-29)
 - [ ] **Phase 4: Memory Inspector** — CLI tree/links/changes/graph + optional static HTML
 - [ ] **Phase 5: Integration** — CLI entry point, config, sample data, docs
 
@@ -72,8 +72,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: `memory_search` and `memory_write` implementations
-- [ ] 03-02: OKF `log.md` append, tool schemas + system prompt template
+- [x] 03-01: `memory_search` and `memory_write` implementations
+- [x] 03-02: OKF `log.md` append, tool schemas + system prompt template
 
 ### Phase 4: Memory Inspector
 **Goal**: Observe file tree, link relationships, and changelog — CLI first, optional browser UI.
@@ -117,6 +117,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. OKF Memory Store | 2/2 | Complete   | 2026-06-29 |
 | 2. Hybrid Index | 4/4 | Complete    | 2026-06-29 |
-| 3. Agent Tools | 0/2 | Planned | - |
+| 3. Agent Tools | 2/2 | Complete   | 2026-06-29 |
 | 4. Memory Inspector | 0/2 | Not started | - |
 | 5. Integration | 0/2 | Not started | - |

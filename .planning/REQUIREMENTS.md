@@ -30,10 +30,10 @@
 
 ### Agent Tools (TOOL)
 
-- [ ] **TOOL-01**: `memory_write(path, content)` writes markdown to the knowledge root
-- [ ] **TOOL-02**: Tools are importable Python functions suitable for Ollama/function-calling integration
-- [ ] **TOOL-03**: System prompt template documents search-before-answer and write-after-learn rules
-- [ ] **TOOL-04**: `memory_write` appends an entry to OKF `log.md` (path, timestamp, summary)
+- [x] **TOOL-01**: `memory_write(path, content)` writes markdown to the knowledge root
+- [x] **TOOL-02**: Tools are importable Python functions suitable for Ollama/function-calling integration
+- [x] **TOOL-03**: System prompt template documents search-before-answer and write-after-learn rules
+- [x] **TOOL-04**: `memory_write` appends an entry to OKF `log.md` (path, timestamp, summary)
 
 ### Memory Inspector (INSPECT)
 
@@ -96,10 +96,10 @@
 | SRCH-02 | Phase 2 | Validated |
 | SRCH-03 | Phase 2 | Validated |
 | SRCH-04 | Phase 2 | Validated |
-| TOOL-01 | Phase 3 | Pending |
-| TOOL-02 | Phase 3 | Pending |
-| TOOL-03 | Phase 3 | Pending |
-| TOOL-04 | Phase 3 | Pending |
+| TOOL-01 | Phase 3 | Validated |
+| TOOL-02 | Phase 3 | Validated |
+| TOOL-03 | Phase 3 | Validated |
+| TOOL-04 | Phase 3 | Validated |
 | INSPECT-01 | Phase 4 | Pending |
 | INSPECT-02 | Phase 4 | Pending |
 | INSPECT-03 | Phase 4 | Pending |

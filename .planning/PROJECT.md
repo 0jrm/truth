@@ -18,13 +18,13 @@ Agents can read before they act and write after they learn, with human-readable 
 - SQLite index with local embeddings and content-hash change detection — **Validated in Phase 2**
 - Hybrid search (vector + BM25 + RRF merge) — **Validated in Phase 2**
 - File watcher re-indexes only changed files; events table tracks create/update/delete — **Validated in Phase 2**
+- Agent tools `memory_search` / `memory_write` with function-calling schemas — **Validated in Phase 3**
+- OKF `log.md` append on writes — **Validated in Phase 3**
+- Agent system prompt contract (search before answer, write after learn) — **Validated in Phase 3**
 
 ### Active
 
-- [ ] `memory_search` and `memory_write` agent tools
-- [ ] OKF `log.md` appended on agent writes (human-readable changelog)
 - [ ] Memory inspector: CLI (`tree`, `links`, `changes`, `graph --json`) + optional static HTML page
-- [ ] Agent system prompt contract (search before answer, write after learn)
 
 ### Out of Scope
 
@@ -85,4 +85,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-28 — Phase 2 complete (hybrid index)*
+*Last updated: 2026-06-29 — Phase 3 complete (agent tools)*
