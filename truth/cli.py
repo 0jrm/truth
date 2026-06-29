@@ -57,6 +57,13 @@ def _cmd_serve(_args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_mcp(_args: argparse.Namespace) -> int:
+    from truth.mcp_server import main as mcp_main
+
+    mcp_main()
+    return 0
+
+
 def _cmd_index(_args: argparse.Namespace) -> int:
     from truth.index.indexer import index_all
 
@@ -88,6 +95,7 @@ def main(argv: list[str] | None = None) -> int:
     p_graph = sub.add_parser("graph", help="Export link graph")
     p_graph.add_argument("--json", action="store_true", help="Output JSON nodes/edges")
 
+    sub.add_parser("mcp", help="Run stdio MCP server for agent tools")
     sub.add_parser("serve", help="Index notes and watch for changes (Ctrl+C to stop)")
     sub.add_parser("index", help="One-shot full reindex")
     sub.add_parser("export", help="Copy static browser inspector into notes root")
@@ -98,6 +106,7 @@ def main(argv: list[str] | None = None) -> int:
         "links": _cmd_links,
         "changes": _cmd_changes,
         "graph": _cmd_graph,
+        "mcp": _cmd_mcp,
         "serve": _cmd_serve,
         "index": _cmd_index,
         "export": _cmd_export,
