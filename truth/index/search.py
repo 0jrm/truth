@@ -58,15 +58,52 @@ def rrf_merge(
     return sorted(scores.items(), key=lambda item: -item[1])
 
 
-def memory_search(query: str, k: int = 5) -> list[dict]:
+def _filtered_paths(
+    conn, type: str | None, tags: list[str] | None
+) -> set[str] | None:
+    if type is None and tags is None:
+        return None
+
+    sql = "SELECT path, tags FROM notes"
+    params: list[str] = []
+    if type is not None:
+        sql += " WHERE type = ?"
+        params.append(type)
+    rows = conn.execute(sql, params).fetchall()
+
+    if tags is None:
+        return {r["path"] for r in rows}
+
+    want = {t.lower() for t in tags}
+    allowed: set[str] = set()
+    for r in rows:
+        raw = r["tags"] or ""
+        have = {t.strip() for t in raw.split(",") if t.strip()}
+        if want <= have:
+            allowed.add(r["path"])
+    return allowed
+
+
+def memory_search(
+    query: str,
+    k: int = 5,
+    *,
+    type: str | None = None,
+    tags: list[str] | None = None,
+) -> list[dict]:
     conn = get_db()
+    allowed = _filtered_paths(conn, type, tags)
+    fetch_k = min(100, max(k * 10, k))
+
     query_vec = embed_texts([query], query=True)[0]
-    fts_ranks = _fts_search(conn, query)
-    vec_ranks = _vec_search(conn, query_vec)
-    merged = rrf_merge(fts_ranks, vec_ranks)[:k]
+    fts_ranks = _fts_search(conn, query, limit=fetch_k)
+    vec_ranks = _vec_search(conn, query_vec, limit=fetch_k)
+    merged = rrf_merge(fts_ranks, vec_ranks)
 
     results: list[dict] = []
     for rowid, score in merged:
+        if len(results) >= k:
+            break
         row = conn.execute(
             """
             SELECT path, text, chunk_index, note_type
@@ -76,6 +113,8 @@ def memory_search(query: str, k: int = 5) -> list[dict]:
             (rowid,),
         ).fetchone()
         if row is None:
+            continue
+        if allowed is not None and row["path"] not in allowed:
             continue
         results.append(
             {

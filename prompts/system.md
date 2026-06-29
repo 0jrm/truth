@@ -4,16 +4,18 @@ You have **persistent memory** stored as OKF markdown files on disk. Use the too
 
 ## Tools
 
-- `memory_search(query, k=5)` — search existing notes (hybrid vector + keyword). **Call this before answering** any question that might depend on prior knowledge.
-- `memory_write(path, content, type="Note", title=None, summary=None)` — create or update a `.md` file under the notes directory. **Call this after** learning something new or completing a task worth remembering.
+- `memory_search(query, k=5, type=None, tags=None)` — search existing notes (hybrid vector + keyword). Optional `type` filters by OKF frontmatter type; optional `tags` requires all listed tags (AND). **Call this before answering** any question that might depend on prior knowledge.
+- `memory_write(path, content, type="Note", title=None, summary=None)` — create or update a `.md` file under the notes directory. Returns `{"path": ..., "previous": ...}`; `previous` is the full prior file text on overwrite, or `null` on create. **Read `previous` before overwriting** an existing note so you can merge rather than clobber.
+- `memory_delete(path)` — remove a note by relative path. Cannot delete `log.md`.
 
 ## Rules
 
 1. **Search before answer** — run `memory_search` when the user asks about facts, preferences, past work, or project context.
 2. **Write after learn** — run `memory_write` when you discover durable facts, decisions, or outcomes the user will need later.
-3. **OKF frontmatter** — every note must have YAML frontmatter with at least `type`. If `content` has no `---` block, pass `type` (and optional `title`).
-4. **Paths** — use relative paths like `concepts/auth.md`; only `.md` files; no `..` traversal.
-5. **Indexer** — run `truth serve` (or `truth index` for one-shot) so search stays current; watcher debounce ~500ms.
+3. **Overwrite safely** — when updating an existing note, use the `previous` field from `memory_write` to preserve content you still need.
+4. **OKF frontmatter** — every note must have YAML frontmatter with at least `type`. If `content` has no `---` block, pass `type` (and optional `title`).
+5. **Paths** — use relative paths like `concepts/auth.md`; only `.md` files; no `..` traversal.
+6. **Indexer** — run `truth serve` (or `truth index` for one-shot) so search stays current; watcher debounce ~500ms.
 
 ## Example flow
 

@@ -62,7 +62,7 @@ def memory_write(
     type: str = "Note",
     title: str | None = None,
     summary: str | None = None,
-) -> Path:
+) -> dict:
     """Write OKF markdown under notes_root. Watcher indexes; no SQLite writes here."""
     root = notes_root()
     target = _safe_note_path(path, root)
@@ -78,13 +78,14 @@ def memory_write(
         meta["title"] = title
 
     text = format_note(meta, body)
+    previous = target.read_text(encoding="utf-8") if target.exists() else None
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(text, encoding="utf-8")
 
     rel = _relative_note_path(target, root)
     _append_log(root, rel, summary or _body_summary(body))
 
-    return target
+    return {"path": rel, "previous": previous}
 
 
 if __name__ == "__main__":
@@ -92,7 +93,9 @@ if __name__ == "__main__":
         os.environ["TRUTH_NOTES_ROOT"] = tmp
         os.environ["TRUTH_DB_PATH"] = str(Path(tmp) / "memory.db")
 
-        written = memory_write("selfcheck/findme.md", "Unique ponytail selfcheck phrase xyz.")
+        created = memory_write("selfcheck/findme.md", "Unique ponytail selfcheck phrase xyz.")
+        assert created["previous"] is None
+        written = notes_root() / created["path"]
         assert written.exists()
 
         conn = open_db()
@@ -101,6 +104,12 @@ if __name__ == "__main__":
 
         hits = memory_search("ponytail selfcheck phrase", k=3)
         assert any("ponytail selfcheck phrase" in h.get("text", "") for h in hits), hits
+
+        overwritten = memory_write(
+            "selfcheck/findme.md", "Revised ponytail selfcheck phrase xyz."
+        )
+        assert overwritten["previous"] is not None
+        assert "Unique ponytail selfcheck phrase" in overwritten["previous"]
 
         try:
             memory_write("../etc/passwd", "nope")

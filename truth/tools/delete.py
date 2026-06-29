@@ -31,8 +31,9 @@ if __name__ == "__main__":
         os.environ["TRUTH_NOTES_ROOT"] = tmp
         os.environ["TRUTH_DB_PATH"] = str(Path(tmp) / "memory.db")
 
-        written = memory_write("delete-me.md", "ponytail delete selfcheck body")
+        result = memory_write("delete-me.md", "ponytail delete selfcheck body")
         root = notes_root()
+        written = root / result["path"]
         conn = open_db()
         init_schema(conn)
         index_file(conn, written, root)

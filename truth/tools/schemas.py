@@ -23,6 +23,17 @@ def tool_schemas() -> list[dict]:
                             "description": "Maximum number of results to return",
                             "default": 5,
                         },
+                        "type": {
+                            "type": "string",
+                            "description": "Optional OKF frontmatter type filter (exact match)",
+                        },
+                        "tags": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": (
+                                "Optional tag filter; all listed tags must be present (AND semantics)"
+                            ),
+                        },
                     },
                     "required": ["query"],
                 },
@@ -34,7 +45,9 @@ def tool_schemas() -> list[dict]:
                 "name": "memory_write",
                 "description": (
                     "Write or update a markdown note in the knowledge base after learning "
-                    "something new. Creates parent directories; appends to log.md automatically."
+                    "something new. Creates parent directories; appends to log.md automatically. "
+                    "On overwrite, returns previous file content in the previous field — read it "
+                    "before merging changes."
                 ),
                 "parameters": {
                     "type": "object",
@@ -62,6 +75,26 @@ def tool_schemas() -> list[dict]:
                         },
                     },
                     "required": ["path", "content"],
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "memory_delete",
+                "description": (
+                    "Delete a markdown note from the knowledge base. "
+                    "Cannot delete log.md. Index cleanup happens via watcher."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "Relative path under notes/ ending in .md",
+                        },
+                    },
+                    "required": ["path"],
                 },
             },
         },

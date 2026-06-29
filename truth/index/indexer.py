@@ -42,6 +42,13 @@ def _delete_chunks_for_path(conn, path: str) -> None:
     conn.execute("DELETE FROM chunks WHERE path = ?", (path,))
 
 
+def _serialize_tags(meta: dict) -> str | None:
+    tags = meta.get("tags")
+    if isinstance(tags, list):
+        return ",".join(sorted(str(t).lower() for t in tags))
+    return None
+
+
 def _should_index_semantic(rel: str, meta: dict) -> bool:
     if rel == "log.md":
         return False
@@ -50,18 +57,27 @@ def _should_index_semantic(rel: str, meta: dict) -> bool:
     return True
 
 
-def _sync_graph(conn, resolved: Path, rel: str, root: Path, note_type: str | None, note_title: str | None) -> None:
+def _sync_graph(
+    conn,
+    resolved: Path,
+    rel: str,
+    root: Path,
+    note_type: str | None,
+    note_title: str | None,
+    tags: str | None = None,
+) -> None:
     mtime = resolved.stat().st_mtime
     conn.execute(
         """
-        INSERT INTO notes (path, type, title, mtime)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO notes (path, type, title, mtime, tags)
+        VALUES (?, ?, ?, ?, ?)
         ON CONFLICT(path) DO UPDATE SET
           type = excluded.type,
           title = excluded.title,
-          mtime = excluded.mtime
+          mtime = excluded.mtime,
+          tags = excluded.tags
         """,
-        (rel, note_type, note_title, mtime),
+        (rel, note_type, note_title, mtime, tags),
     )
     conn.execute("DELETE FROM edges WHERE source = ?", (rel,))
     for edge in extract_links(resolved, root):
@@ -124,6 +140,7 @@ def index_file(conn, path: Path, notes: Path) -> bool:
     note_title = parsed.meta.get("title")
     if note_title is not None:
         note_title = str(note_title)
+    tags = _serialize_tags(parsed.meta)
 
     is_update = existing is not None
 
@@ -141,7 +158,7 @@ def index_file(conn, path: Path, notes: Path) -> bool:
                 """,
                 (rel, digest, _utc_now()),
             )
-            _sync_graph(conn, resolved, rel, root, note_type, note_title)
+            _sync_graph(conn, resolved, rel, root, note_type, note_title, tags)
             record_event(conn, rel, "update" if is_update else "create")
             conn.commit()
         except Exception:
@@ -184,7 +201,7 @@ def index_file(conn, path: Path, notes: Path) -> bool:
             """,
             (rel, digest, _utc_now()),
         )
-        _sync_graph(conn, resolved, rel, root, note_type, note_title)
+        _sync_graph(conn, resolved, rel, root, note_type, note_title, tags)
         record_event(conn, rel, "update" if is_update else "create")
         conn.commit()
     except Exception:

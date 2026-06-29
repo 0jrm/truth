@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS notes (
   path TEXT PRIMARY KEY,
   type TEXT,
   title TEXT,
-  mtime REAL NOT NULL
+  mtime REAL NOT NULL,
+  tags TEXT
 );
 
 CREATE TABLE IF NOT EXISTS edges (
@@ -93,10 +94,19 @@ def _drop_index_tables(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+def _notes_has_tags_column(conn: sqlite3.Connection) -> bool:
+    rows = conn.execute("PRAGMA table_info(notes)").fetchall()
+    return any(row["name"] == "tags" for row in rows)
+
+
 def init_schema(conn: sqlite3.Connection) -> None:
     if _schema_stale(conn):
         _drop_index_tables(conn)
     conn.executescript(_SCHEMA)
+    if conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='notes'"
+    ).fetchone() and not _notes_has_tags_column(conn):
+        conn.execute("ALTER TABLE notes ADD COLUMN tags TEXT")
     conn.commit()
 
 
