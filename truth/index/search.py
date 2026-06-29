@@ -2,7 +2,7 @@ import re
 
 import sqlite_vec
 
-from .db import open_db
+from .db import get_db
 from .embeddings import embed_texts
 
 _RRF_K = 60
@@ -59,8 +59,8 @@ def rrf_merge(
 
 
 def memory_search(query: str, k: int = 5) -> list[dict]:
-    conn = open_db()
-    query_vec = embed_texts([query])[0]
+    conn = get_db()
+    query_vec = embed_texts([query], query=True)[0]
     fts_ranks = _fts_search(conn, query)
     vec_ranks = _vec_search(conn, query_vec)
     merged = rrf_merge(fts_ranks, vec_ranks)[:k]
