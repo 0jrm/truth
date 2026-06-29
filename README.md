@@ -106,10 +106,17 @@ Export the static inspector into your notes folder (beside `memory.db`):
 
 ```bash
 truth export
-# open file:///.../notes/inspector.html in your browser
 ```
 
-Open the exported `inspector.html` from your notes root (`file://` — same folder as `memory.db` and markdown files). The page reads `memory.db` via sql.js (offline, no server).
+Serve the notes folder over HTTP and open the inspector in your browser:
+
+```bash
+cd notes   # or $TRUTH_NOTES_ROOT
+python -m http.server 8765
+# http://127.0.0.1:8765/inspector.html
+```
+
+**Do not open `inspector.html` via `file://`.** Modern browsers block `fetch()` from `file://` pages to other local files (`memory.db`, `vendor/sql-wasm.wasm`, note `.md` files). The UI shell loads but Tree, Note, Links, and Changes stay empty. Use a local HTTP server (as above) — the page still reads `memory.db` via sql.js with no Truth backend.
 
 **Four panels:** Tree, Note (raw markdown from disk, including frontmatter), Links, Changes. The Note panel fetches `.md` files directly; disk may be ahead of the index until the watcher reindexes.
 

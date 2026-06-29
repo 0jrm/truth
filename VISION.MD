@@ -108,7 +108,7 @@ Truth includes a memory inspector for humans — observability, not part of the 
 **Optional browser inspector:**
 
 - `truth export` — copies a static HTML page into the notes folder
-- Opens `inspector.html` in a browser; reads `memory.db` directly via sql.js (offline, no server)
+- Serve `notes/` over HTTP (e.g. `python -m http.server`) and open `inspector.html`; reads `memory.db` via sql.js — **`file://` does not work** (browsers block local `fetch()`)
 
 These tools help you see what the agent wrote, trace link relationships, and review the changelog. The agent does not need them to search or write.
 
