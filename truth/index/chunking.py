@@ -37,7 +37,7 @@ def chunk_text(body: str, target: int = 512, overlap: int = 64) -> list[str]:
         if i > 0 and overlap:
             prev = overlapped[-1]
             tail = prev[-overlap:] if len(prev) > overlap else prev
-            chunk = f"{tail}{chunk}" if tail else chunk
+            chunk = f"{tail}\n\n{chunk}" if tail else chunk
         overlapped.append(chunk)
     return overlapped
 
@@ -54,3 +54,13 @@ def _split_long(text: str, target: int, overlap: int) -> list[str]:
             break
         start = max(end - overlap, start + 1)
     return out
+
+
+if __name__ == "__main__":
+    p1 = "A" * 40
+    p2 = "B" * 40
+    body = f"{p1}\n\n{p2}"
+    chunks = chunk_text(body, target=50, overlap=20)
+    assert len(chunks) >= 2, chunks
+    assert any("\n\n" in c and "A" in c and "B" in c for c in chunks[1:]), chunks
+    print("ok")
