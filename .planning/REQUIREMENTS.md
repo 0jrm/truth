@@ -37,11 +37,11 @@
 
 ### Memory Inspector (INSPECT)
 
-- [ ] **INSPECT-01**: `truth tree` shows folder hierarchy with type/title from frontmatter
-- [ ] **INSPECT-02**: `truth links [path]` shows incoming and outgoing link edges for a note
-- [ ] **INSPECT-03**: `truth changes [-n]` shows recent file ops from the events table
-- [ ] **INSPECT-04**: `truth graph --json` exports nodes/edges for external tools (Obsidian, etc.)
-- [ ] **INSPECT-05**: Optional `truth serve` exposes JSON API + single static `inspector.html` (tree, links, changes panels)
+- [x] **INSPECT-01**: `truth tree` shows folder hierarchy with type/title from frontmatter
+- [x] **INSPECT-02**: `truth links [path]` shows incoming and outgoing link edges for a note
+- [x] **INSPECT-03**: `truth changes [-n]` shows recent file ops from the events table
+- [x] **INSPECT-04**: `truth graph --json` exports nodes/edges for external tools (Obsidian, etc.)
+- [x] **INSPECT-05**: Optional `truth serve` exposes JSON API + single static `inspector.html` (tree, links, changes panels)
 
 ### CLI & Config (CLI)
 
@@ -100,11 +100,11 @@
 | TOOL-02 | Phase 3 | Validated |
 | TOOL-03 | Phase 3 | Validated |
 | TOOL-04 | Phase 3 | Validated |
-| INSPECT-01 | Phase 4 | Pending |
-| INSPECT-02 | Phase 4 | Pending |
-| INSPECT-03 | Phase 4 | Pending |
-| INSPECT-04 | Phase 4 | Pending |
-| INSPECT-05 | Phase 4 | Pending |
+| INSPECT-01 | Phase 4 | Complete |
+| INSPECT-02 | Phase 4 | Complete |
+| INSPECT-03 | Phase 4 | Complete |
+| INSPECT-04 | Phase 4 | Complete |
+| INSPECT-05 | Phase 4 | Complete |
 | CLI-01 | Phase 5 | Pending |
 | CLI-02 | Phase 5 | Pending |
 

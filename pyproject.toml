@@ -15,6 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
+truth = "truth.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

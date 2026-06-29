@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Truth Inspector</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; background: #1a1a1a; color: #e8e8e8; }
+    header { padding: 1rem 1.25rem; border-bottom: 1px solid #333; }
+    h1 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+    main { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; min-height: calc(100vh - 3rem); }
+    section { border-right: 1px solid #333; padding: 0.75rem; overflow: auto; }
+    section:last-child { border-right: none; }
+    h2 { margin: 0 0 0.75rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #999; }
+    ul { list-style: none; margin: 0; padding: 0; }
+    li { padding: 0.35rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+    li:hover, li.active { background: #2a2a2a; }
+    .meta { color: #888; font-size: 0.8rem; }
+    .edge { font-size: 0.85rem; padding: 0.2rem 0; }
+    .err { color: #f66; }
+  </style>
+</head>
+<body>
+  <header><h1>Truth Inspector</h1></header>
+  <main>
+    <section id="tree-panel">
+      <h2>Tree</h2>
+      <ul id="tree"></ul>
+    </section>
+    <section id="links-panel">
+      <h2>Links</h2>
+      <div id="links"><p class="meta">Select a note</p></div>
+    </section>
+    <section id="changes-panel">
+      <h2>Changes</h2>
+      <ul id="changes"></ul>
+    </section>
+  </main>
+  <script>
+    const treeEl = document.getElementById('tree');
+    const linksEl = document.getElementById('links');
+    const changesEl = document.getElementById('changes');
+    let active = null;
+
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    async function loadTree() {
+      const res = await fetch('/api/tree');
+      const items = await res.json();
+      treeEl.innerHTML = items.map(it => {
+        const pad = '&nbsp;'.repeat(it.depth * 2);
+        return `<li data-path="${esc(it.path)}" style="padding-left:${it.depth * 12 + 8}px">
+          <div>${pad}${esc(it.path)}</div>
+          <div class="meta">[${esc(it.type)}] ${esc(it.title)}</div>
+        </li>`;
+      }).join('');
+      treeEl.querySelectorAll('li').forEach(li => {
+        li.addEventListener('click', () => selectNote(li.dataset.path, li));
+      });
+      if (items.length) selectNote(items[0].path, treeEl.querySelector('li'));
+    }
+
+    async function selectNote(path, li) {
+      active = path;
+      treeEl.querySelectorAll('li').forEach(n => n.classList.remove('active'));
+      if (li) li.classList.add('active');
+      const res = await fetch('/api/links?path=' + encodeURIComponent(path));
+      const data = await res.json();
+      if (data.error) {
+        linksEl.innerHTML = `<p class="err">${esc(data.error)}</p>`;
+        return;
+      }
+      const out = data.outgoing.map(e =>
+        `<div class="edge">→ ${esc(e.target)}${e.label ? ' <span class="meta">"' + esc(e.label) + '"</span>' : ''}</div>`
+      ).join('') || '<p class="meta">No outgoing links</p>';
+      const inc = data.incoming.map(e =>
+        `<div class="edge">← ${esc(e.source)}${e.label ? ' <span class="meta">"' + esc(e.label) + '"</span>' : ''}</div>`
+      ).join('') || '<p class="meta">No incoming links</p>';
+      linksEl.innerHTML = `<p><strong>${esc(data.path)}</strong></p><h3>Outgoing</h3>${out}<h3>Incoming</h3>${inc}`;
+    }
+
+    async function loadChanges() {
+      const res = await fetch('/api/changes?n=20');
+      const items = await res.json();
+      changesEl.innerHTML = items.map(ev =>
+        `<li><span class="meta">${esc(ev.ts)}</span> ${esc(ev.op)} <strong>${esc(ev.path)}</strong></li>`
+      ).join('') || '<li class="meta">No events yet</li>';
+    }
+
+    Promise.all([loadTree(), loadChanges()]).catch(err => {
+      treeEl.innerHTML = `<li class="err">${esc(err)}</li>`;
+    });
+  </script>
+</body>
+</html>
