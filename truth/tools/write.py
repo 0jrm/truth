@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 from truth.index.db import init_schema, open_db
@@ -25,6 +26,33 @@ def _safe_note_path(rel: str, root: Path) -> Path:
     except ValueError as exc:
         raise ValueError(f"path escapes notes root: {rel!r}") from exc
     return target
+
+
+def _relative_note_path(target: Path, root: Path) -> str:
+    return str(target.resolve().relative_to(root.resolve()))
+
+
+def _body_summary(body: str, max_len: int = 120) -> str:
+    for line in body.splitlines():
+        stripped = line.strip()
+        if stripped:
+            return stripped[:max_len]
+    return "(empty)"
+
+
+def _append_log(root: Path, rel_path: str, summary: str) -> None:
+    """Append OKF changelog entry to notes/log.md."""
+    log_path = root / "log.md"
+    ts = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    line = f"- {ts} **{rel_path}** — {summary}\n"
+    if not log_path.exists():
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        log_path.write_text(
+            format_note({"type": "Log", "title": "Changelog"}, ""),
+            encoding="utf-8",
+        )
+    with log_path.open("a", encoding="utf-8") as f:
+        f.write(line)
 
 
 def memory_write(
@@ -52,6 +80,10 @@ def memory_write(
     text = format_note(meta, body)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(text, encoding="utf-8")
+
+    rel = _relative_note_path(target, root)
+    _append_log(root, rel, summary or _body_summary(body))
+
     return target
 
 
