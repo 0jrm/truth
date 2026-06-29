@@ -15,12 +15,12 @@ Agents can read before they act and write after they learn, with human-readable 
 - OKF-compliant markdown store with enforced `type` frontmatter — **Validated in Phase 1**
 - Cross-links parseable for graph building (MEM-04) — **Validated in Phase 1**
 - Configurable `notes/` knowledge root — **Validated in Phase 1**
+- SQLite index with local embeddings and content-hash change detection — **Validated in Phase 2**
+- Hybrid search (vector + BM25 + RRF merge) — **Validated in Phase 2**
+- File watcher re-indexes only changed files; events table tracks create/update/delete — **Validated in Phase 2**
 
 ### Active
 
-- [ ] SQLite index with local embeddings and content-hash change detection
-- [ ] Hybrid search (vector + BM25 + RRF merge)
-- [ ] File watcher re-indexes only changed files; events table tracks create/update/delete
 - [ ] `memory_search` and `memory_write` agent tools
 - [ ] OKF `log.md` appended on agent writes (human-readable changelog)
 - [ ] Memory inspector: CLI (`tree`, `links`, `changes`, `graph --json`) + optional static HTML page
@@ -59,12 +59,13 @@ Reference doc: `VISION.MD` in project root.
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Markdown as truth, SQLite as index | OKF alignment; human-readable; agents write files not DB rows | ✓ Phase 1 store layer |
-| Hybrid search (vector + BM25 + RRF) | Better recall than either alone; standard pattern for local RAG | — Pending |
+| Hybrid search (vector + BM25 + RRF) | Better recall than either alone; standard pattern for local RAG | ✓ Phase 2 |
 | Inspector-first, not dashboard | CLI + event log + optional static HTML; full dashboard deferred to v2 | ✓ Accepted 2026-06-28 |
-| Events table for changelog | File mtime alone misses deletes and is unreliable; watcher writes events | — Pending |
-| OKF `log.md` on write | Human-readable changelog with zero UI; agent-maintained per OKF convention | — Pending |
-| Local ONNX embeddings | Offline, no Ollama dependency for search | — Pending |
+| Events table for changelog | File mtime alone misses deletes and is unreliable; watcher writes events | ✓ Phase 2 |
+| OKF `log.md` on write | Human-readable changelog with zero UI; agent-maintained per OKF convention | — Pending Phase 3 |
+| Local ONNX embeddings | Offline, no Ollama dependency for search | ✓ Phase 2 (MiniLM via sentence-transformers) |
 | `notes/` as default knowledge root | Configurable path; matches vision doc structure | ✓ Phase 1 |
+| Watcher thread-safe SQLite | watchdog Timer threads share DB connection | ✓ Phase 2 (check_same_thread=False + lock) |
 
 ## Evolution
 
@@ -84,4 +85,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-28 — Phase 1 complete (OKF memory store)*
+*Last updated: 2026-06-28 — Phase 2 complete (hybrid index)*

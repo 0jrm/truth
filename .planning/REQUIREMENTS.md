@@ -14,19 +14,19 @@
 
 ### Indexing (IDX)
 
-- [ ] **IDX-01**: Indexer walks the knowledge folder, chunks each `.md` file, and stores text + metadata in SQLite
-- [ ] **IDX-02**: Chunks are embedded with a local in-process model (no external API)
-- [ ] **IDX-03**: Content-hash change detection skips unchanged files on re-index
-- [ ] **IDX-04**: File watcher detects create/update/delete and re-indexes only affected files
-- [ ] **IDX-05**: Failed index operations do not leave partial/corrupt rows (transactional safety)
-- [ ] **IDX-06**: Watcher writes create/update/delete events to an `events` table (path, op, timestamp)
+- [x] **IDX-01**: Indexer walks the knowledge folder, chunks each `.md` file, and stores text + metadata in SQLite
+- [x] **IDX-02**: Chunks are embedded with a local in-process model (no external API)
+- [x] **IDX-03**: Content-hash change detection skips unchanged files on re-index
+- [x] **IDX-04**: File watcher detects create/update/delete and re-indexes only affected files
+- [x] **IDX-05**: Failed index operations do not leave partial/corrupt rows (transactional safety)
+- [x] **IDX-06**: Watcher writes create/update/delete events to an `events` table (path, op, timestamp)
 
 ### Search (SRCH)
 
-- [ ] **SRCH-01**: `memory_search(query, k)` returns top-k relevant chunks
-- [ ] **SRCH-02**: Search combines vector similarity and BM25 keyword search
-- [ ] **SRCH-03**: Results are merged via reciprocal rank fusion (RRF)
-- [ ] **SRCH-04**: Search results include source path, chunk text, and relevance score
+- [x] **SRCH-01**: `memory_search(query, k)` returns top-k relevant chunks
+- [x] **SRCH-02**: Search combines vector similarity and BM25 keyword search
+- [x] **SRCH-03**: Results are merged via reciprocal rank fusion (RRF)
+- [x] **SRCH-04**: Search results include source path, chunk text, and relevance score
 
 ### Agent Tools (TOOL)
 
@@ -82,20 +82,20 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MEM-01 | Phase 1 | Pending |
-| MEM-02 | Phase 1 | Pending |
-| MEM-03 | Phase 1 | Pending |
-| MEM-04 | Phase 1 | Pending |
-| IDX-01 | Phase 2 | Pending |
-| IDX-02 | Phase 2 | Pending |
-| IDX-03 | Phase 2 | Pending |
-| IDX-04 | Phase 2 | Pending |
-| IDX-05 | Phase 2 | Pending |
-| IDX-06 | Phase 2 | Pending |
-| SRCH-01 | Phase 2 | Pending |
-| SRCH-02 | Phase 2 | Pending |
-| SRCH-03 | Phase 2 | Pending |
-| SRCH-04 | Phase 2 | Pending |
+| MEM-01 | Phase 1 | Validated |
+| MEM-02 | Phase 1 | Validated |
+| MEM-03 | Phase 1 | Validated (validator ready; write API Phase 3) |
+| MEM-04 | Phase 1 | Validated |
+| IDX-01 | Phase 2 | Validated |
+| IDX-02 | Phase 2 | Validated |
+| IDX-03 | Phase 2 | Validated |
+| IDX-04 | Phase 2 | Validated |
+| IDX-05 | Phase 2 | Validated |
+| IDX-06 | Phase 2 | Validated |
+| SRCH-01 | Phase 2 | Validated |
+| SRCH-02 | Phase 2 | Validated |
+| SRCH-03 | Phase 2 | Validated |
+| SRCH-04 | Phase 2 | Validated |
 | TOOL-01 | Phase 3 | Pending |
 | TOOL-02 | Phase 3 | Pending |
 | TOOL-03 | Phase 3 | Pending |
@@ -115,4 +115,4 @@
 
 ---
 *Requirements defined: 2026-06-28*
-*Last updated: 2026-06-28 after inspector-first scope revision*
+*Last updated: 2026-06-28 after Phase 2 UAT*

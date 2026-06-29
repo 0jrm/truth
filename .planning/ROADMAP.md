@@ -7,7 +7,7 @@ Build a local OKF-compliant agent memory system in five coarse phases: establish
 ## Phases
 
 - [x] **Phase 1: OKF Memory Store** — Markdown truth layer with frontmatter enforcement (completed 2026-06-29)
-- [ ] **Phase 2: Hybrid Index** — SQLite + embeddings + watcher + search + events table
+- [x] **Phase 2: Hybrid Index** — SQLite + embeddings + watcher + search + events table (completed 2026-06-29)
 - [ ] **Phase 3: Agent Tools** — `memory_search`, `memory_write`, OKF `log.md` append
 - [ ] **Phase 4: Memory Inspector** — CLI tree/links/changes/graph + optional static HTML
 - [ ] **Phase 5: Integration** — CLI entry point, config, sample data, docs
@@ -53,10 +53,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 02-01: SQLite schema, chunking, local embedding model integration
-- [ ] 02-02: BM25 + vector search + RRF merge
-- [ ] 02-03: Watchdog watcher with content-hash incremental updates
-- [ ] 02-04: Events table + change tracking on file ops
+- [x] 02-01: SQLite schema, chunking, local embedding model integration
+- [x] 02-02: BM25 + vector search + RRF merge
+- [x] 02-03: Watchdog watcher with content-hash incremental updates
+- [x] 02-04: Events table + change tracking on file ops
 
 ### Phase 3: Agent Tools
 **Goal**: Clean Python API for agents to search and write memory, OKF log append, plus system prompt contract.
@@ -116,7 +116,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. OKF Memory Store | 2/2 | Complete   | 2026-06-29 |
-| 2. Hybrid Index | 0/4 | Not started | - |
-| 3. Agent Tools | 0/2 | Not started | - |
+| 2. Hybrid Index | 4/4 | Complete    | 2026-06-29 |
+| 3. Agent Tools | 0/2 | Planned | - |
 | 4. Memory Inspector | 0/2 | Not started | - |
 | 5. Integration | 0/2 | Not started | - |
