@@ -191,6 +191,50 @@ def run(user_message: str):
 
 The watcher re-indexes writes within ~500ms. The agent's next `memory_search` will see what it just wrote.
 
+## MCP (Cursor / Claude Code)
+
+Expose `memory_search`, `memory_write`, and `memory_delete` to Cursor or Claude Code via stdio MCP.
+
+**Prerequisites:** `pip install -e .` and a one-time `truth index` (downloads the embedding model on first run).
+
+**Spawn command:**
+
+```bash
+truth mcp
+```
+
+**Cursor** — add to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "truth": {
+      "command": "truth",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+Optional env overrides in the server block:
+
+```json
+"env": {
+  "TRUTH_NOTES_ROOT": "/path/to/notes",
+  "TRUTH_DB_PATH": "/path/to/notes/memory.db"
+}
+```
+
+**Claude Code:**
+
+```bash
+claude mcp add truth -- truth mcp
+```
+
+On startup the MCP server runs `index_all` and starts the file watcher (same bootstrap as `truth serve`). Do not run a second `truth serve` on the same notes root — one watcher per notes directory.
+
+Agent workflow (search-before-answer, write-after-learn): see [skills/truth-memory/SKILL.md](skills/truth-memory/SKILL.md).
+
 ## Project structure
 
 ```
@@ -220,6 +264,12 @@ notes/inspector.html  # optional — from truth export
 - [x] Phase 3 — Agent tools (`memory_search`, `memory_write`), `log.md`, system prompt
 - [x] Phase 4 — Memory inspector CLI (`truth tree`, `truth links`, `truth changes`, `truth graph`)
 - [x] Phase 5 — `truth serve` / `truth index`, env config, static sql.js inspector, docs
+- [x] Phase 6 — Search quality fixes (nomic embeddings, porter FTS, RRF tuning)
+- [x] Phase 7 — Indexer and watcher correctness
+- [x] Phase 8 — Agent API completion (`memory_delete`, filters)
+- [x] Phase 9 — Docs and test suite
+- [x] Phase 10 — Inspector upgrades
+- [x] Phase 11 — MCP stdio server (`truth mcp`), project skill, dogfood decision note
 
 ## Known ceilings (v1)
 
