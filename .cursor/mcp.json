@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "truth": {
+      "command": "truth",
+      "args": ["mcp"],
+      "env": {
+        "TRUTH_NOTES_ROOT": "/home/jrm22n/projects/truth/notes",
+        "TRUTH_DB_PATH": "/home/jrm22n/projects/truth/notes/memory.db"
+      }
+    }
+  }
+}

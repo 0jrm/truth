@@ -54,7 +54,7 @@ Build order: store → index (+ events) → tools (+ log.md) → inspector → C
 <!-- GSD:skills-start source:skills/ -->
 ## Project Skills
 
-No project-local skills yet.
+- **[truth-memory](skills/truth-memory/SKILL.md)** — search-before-answer / write-after-learn workflow via MCP (`memory_search`, `memory_write`, `memory_delete`). Use for project context, decisions, and durable notes in `notes/`.
 
 <!-- GSD:skills-end -->
 
@@ -63,8 +63,8 @@ No project-local skills yet.
 
 This project uses [Get Shit Done](https://github.com/gsd-build/get-shit-done) for phased execution.
 
-**Current phase:** 6 — Search Quality Fixes
-**Milestone:** v1.1 Quality Sharpening (`dev` branch)
+**Current phase:** 11 — complete (v1.1 shipped)
+**Milestone:** v1.1 Quality Sharpening (merged to `master`)
 **Roadmap:** `.planning/ROADMAP.md`
 **State:** `.planning/STATE.md`
 

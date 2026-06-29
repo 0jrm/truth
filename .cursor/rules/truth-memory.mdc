@@ -1,0 +1,15 @@
+---
+description: Use Truth MCP for project memory — search before answer, write after learn
+alwaysApply: true
+---
+
+# Truth agent memory
+
+This project dogfoods **Truth** as persistent agent memory. Follow [skills/truth-memory/SKILL.md](../../skills/truth-memory/SKILL.md).
+
+- **Search before answer** — `memory_search(query, k=5)` when the task may depend on prior notes in `notes/`.
+- **Write after learn** — `memory_write(...)` for durable decisions and facts; merge using `previous` on overwrite.
+- **Never delete `log.md`** — human-readable changelog.
+- MCP tools are exposed via the `truth` server (`truth mcp`); do not run a second `truth serve` on the same notes root.
+
+Markdown in `notes/` is source of truth; never write to SQLite directly.
