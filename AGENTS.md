@@ -63,7 +63,8 @@ No project-local skills yet.
 
 This project uses [Get Shit Done](https://github.com/gsd-build/get-shit-done) for phased execution.
 
-**Current phase:** 2 — Hybrid Index
+**Current phase:** 6 — Search Quality Fixes
+**Milestone:** v1.1 Quality Sharpening (`dev` branch)
 **Roadmap:** `.planning/ROADMAP.md`
 **State:** `.planning/STATE.md`
 

@@ -1,0 +1,14 @@
+{
+  "goalsPath": "./goals.md",
+  "verbose": true,
+  "logLevel": "info",
+  "workspaceRoot": ".",
+  "agent": "cursor",
+  "cursorAgentPath": "agent",
+  "agentTimeoutMs": 1800000,
+  "stateWatchDebounceMs": 500,
+  "requireCleanGitBeforePlan": true,
+  "autoCheckpoint": true,
+  "statusServerPort": 3001,
+  "maxCpuFraction": 0.85
+}
