@@ -75,9 +75,41 @@ pip install -e ".[test]"
 pytest
 ```
 
-Regression coverage includes search quality (5-note rank-1), agent API filters/overwrite/delete, watcher concurrency, and an end-to-end smoke pipeline — all via `pytest`.
+Regression coverage includes search quality (5-note rank-1), agent API filters/overwrite/delete, watcher concurrency, and an end-to-end smoke pipeline — all via `pytest`. Optional MCP stress harness: `python tests/stress_mcp_shared_notes.py`.
+
+## Performance
+
+Timed on this machine against real `notes/` (7 indexed files, nomic-embed on CPU).
+
+| Operation | Time | Notes |
+|---|---|---|
+| Model cold load (first embed) | ~2.5 s | In-process, one-time per process |
+| `truth index` CLI (subprocess) | ~11–13 s | New Python process reloads model every time, even if nothing changed |
+| `index_all` in-process, warm, unchanged | ~5–7 ms | Hash skip — almost all work avoided |
+| `index_all` in-process, warm, 12 md files | ~107 ms | Full pass with some reindexing |
+| Embed 1 doc, warm | ~51–69 ms | |
+| Embed 10 docs, warm | ~159–181 ms | |
+| `index_file` new note (embed + SQLite) | ~135 ms | Direct, no watcher |
+| `memory_write` (disk only) | <1 ms | Watcher indexes separately |
+| `memory_search` k=5, warm | ~55–68 ms | |
+| `open_db` + `init_schema` | ~1 ms | |
+| Watcher round-trip (write → indexed) | ~625–665 ms | ~500 ms debounce + ~135 ms index |
+| `truth mcp` cold boot (`initialize`) | ~7.5 s | `index_all` + model load + watcher per subprocess |
+| `memory_write` via MCP | ~17 ms | RPC only; indexing still async |
+| MCP write → `memory_search` hit | ~2.2 s | Debounce + index + search poll (agent-visible latency) |
+| `memory_search` via MCP, warm | ~58 ms | After index caught up |
+
+**What dominates**
+
+1. **Embedding model load** — ~2.5 s in-process, ~7.5 s MCP boot, ~12 s per CLI subprocess.
+2. **Watcher debounce** — fixed 500 ms floor on every write.
+3. **Actual index work, warm** — ~135 ms/note. Search is ~60 ms/query.
+
+Everything else (SQLite, markdown I/O) is noise at this scale. Agents using MCP feel (2) + (3) as ~2 s before a write is searchable.
 
 ## Quick start
+
+Create a `notes/` folder (or set `TRUTH_NOTES_ROOT`) with at least one OKF markdown file, then:
 
 **1. Index your notes**
 
@@ -254,7 +286,7 @@ Expose `memory_search`, `memory_write`, and `memory_delete` to Cursor or Claude 
 truth mcp
 ```
 
-**Cursor** — copy `.cursor/mcp.json.example` to `.cursor/mcp.json` (or add directly):
+**Cursor** — `truth skill install` writes `.cursor/mcp.json` for you. Otherwise create it manually:
 
 ```json
 {
@@ -282,9 +314,9 @@ Optional env overrides in the server block:
 claude mcp add truth -- truth mcp
 ```
 
-On startup the MCP server runs `index_all` and starts the file watcher (same bootstrap as `truth serve`). Do not run a second `truth serve` on the same notes root — one watcher per notes directory.
+On startup the MCP server runs `index_all` and starts the file watcher (same bootstrap as `truth serve`). Each Truth process starts its own watcher and loads its own embedding model — do not run a second `truth serve` on the same notes root. See [Concurrency](#concurrency) for how many agents can safely share one `notes/` folder.
 
-Agent workflow (search-before-answer, write-after-learn): install with `truth skill install` or see [truth/bundled/truth-memory/SKILL.md](truth/bundled/truth-memory/SKILL.md).
+Agent workflow (search-before-answer, write-after-learn): install with `truth skill install` or see `.cursor/skills/truth-memory/SKILL.md` in your project.
 
 ## Project structure
 
@@ -322,8 +354,37 @@ notes/inspector.html  # optional — from truth export
 - [x] Phase 10 — Inspector upgrades
 - [x] Phase 11 — MCP stdio server (`truth mcp`), project skill, dogfood decision note
 
+## Concurrency
+
+Stress-tested with `tests/stress_mcp_shared_notes.py`: N concurrent MCP clients, each spawning `truth mcp` (stdio) against one shared `notes/` + `memory.db` on one machine (2026-06-30). Success = `memory_write` then `memory_search` returns the new path — the same path agents actually use.
+
+| MCP clients | Result | Searchable | Indexed / disk | Errors | Wall time | DB integrity |
+|------------:|--------|------------|----------------|--------|-----------|--------------|
+| 1 | OK | 1/1 | 1/1 | 0 | 10.2 s | ok |
+| 2 | OK | 2/2 | 2/2 | 0 | 12.2 s | ok |
+| 4 | fail | 3/4 | 3/3 | 1 bootstrap | 14.8 s | ok |
+| 8 | OK | 8/8 | 8/8 | 0 | 30.9 s | ok |
+| 16 | fail | 10/16 | 10/16 | 6 search timeouts | 60.5 s | ok |
+
+Baseline notes were never corrupted; `PRAGMA integrity_check` stayed ok at every level.
+
+**What changes vs in-process testing**
+
+- Each client is a real `truth mcp` subprocess: `index_all` + watcher + model load on every connect (~7.5 s cold boot).
+- Writes are validated through `memory_search`, not a direct SQLite poll — closer to Cursor / Claude Code behavior.
+- MCP boot is heavier than calling `memory_write` in Python, but the index path is the same once warm.
+
+**Practical guidance**
+
+- **Same machine, 1–8 MCP sessions** on one `notes/` — passed in testing (4 had one flaky parallel bootstrap). Budget ~8 s first tool call per new MCP process and ~2 s before a write is searchable.
+- **16+ MCP processes** — boot contention (30–40 s) and index lag; some writes never become searchable within the test window.
+- **Network drive / multiple machines** — not stress-tested. SQLite WAL + one-watcher-per-process still make this risky.
+
+Reproduce: `python tests/stress_mcp_shared_notes.py` (writes `tests/stress_mcp_results.json`; uses `/tmp/truth-mcp-golden`, does not touch project `notes/`).
+
 ## Known ceilings (v1)
 
+- One watcher per `truth mcp` process; same `notes/` supports ~8 concurrent MCP clients in testing (see [Concurrency](#concurrency))
 - `log.md` grows unbounded; trim manually or rotate at a future milestone
 - Porter FTS stems English aggressively; non-English corpora may need a different tokenizer
 - Very large corpora (10k+ notes) may need tuning of chunk size or R3 limits

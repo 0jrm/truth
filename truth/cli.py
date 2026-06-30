@@ -3,6 +3,7 @@
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from truth.inspect.changes import recent_changes
 from truth.inspect.graph import build_graph

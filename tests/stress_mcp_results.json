@@ -1,0 +1,168 @@
+{
+  "timings": {
+    "mcp_cold_boot_sec": 7.5,
+    "mcp_write_sec": 0.017,
+    "mcp_write_to_search_sec": 2.18,
+    "mcp_search_warm_sec": 0.058,
+    "mcp_session_sec": 10.7
+  },
+  "levels": [
+    {
+      "clients": 1,
+      "elapsed_sec": 10.2,
+      "disk_stress_md": 1,
+      "indexed_stress_files": 1,
+      "searchable_via_mcp": 1,
+      "missing_search": 0,
+      "worker_errors": 0,
+      "errors_sample": [],
+      "integrity": "ok",
+      "baseline_intact": true,
+      "worker_boot_sec": [
+        6.9
+      ],
+      "worker_elapsed": [
+        9.6
+      ],
+      "robust": true
+    },
+    {
+      "clients": 2,
+      "elapsed_sec": 12.2,
+      "disk_stress_md": 2,
+      "indexed_stress_files": 2,
+      "searchable_via_mcp": 2,
+      "missing_search": 0,
+      "worker_errors": 0,
+      "errors_sample": [],
+      "integrity": "ok",
+      "baseline_intact": true,
+      "worker_boot_sec": [
+        7.7,
+        9.9
+      ],
+      "worker_elapsed": [
+        10.8,
+        11.5
+      ],
+      "robust": true
+    },
+    {
+      "clients": 4,
+      "elapsed_sec": 14.8,
+      "disk_stress_md": 3,
+      "indexed_stress_files": 3,
+      "searchable_via_mcp": 3,
+      "missing_search": 1,
+      "worker_errors": 1,
+      "errors_sample": [
+        "bootstrap: ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)"
+      ],
+      "integrity": "ok",
+      "baseline_intact": true,
+      "worker_boot_sec": [
+        null,
+        9.8,
+        11.9,
+        12.3
+      ],
+      "worker_elapsed": [
+        11.1,
+        13.1,
+        13.7,
+        14.0
+      ],
+      "robust": false
+    },
+    {
+      "clients": 8,
+      "elapsed_sec": 30.9,
+      "disk_stress_md": 8,
+      "indexed_stress_files": 8,
+      "searchable_via_mcp": 8,
+      "missing_search": 0,
+      "worker_errors": 0,
+      "errors_sample": [],
+      "integrity": "ok",
+      "baseline_intact": true,
+      "worker_boot_sec": [
+        14.4,
+        16.7,
+        17.0,
+        19.9,
+        19.7,
+        20.0,
+        18.1,
+        19.4
+      ],
+      "worker_elapsed": [
+        19.3,
+        25.4,
+        26.9,
+        27.2,
+        27.2,
+        27.3,
+        28.2,
+        29.7
+      ],
+      "robust": true
+    },
+    {
+      "clients": 16,
+      "elapsed_sec": 60.5,
+      "disk_stress_md": 16,
+      "indexed_stress_files": 10,
+      "searchable_via_mcp": 10,
+      "missing_search": 6,
+      "worker_errors": 6,
+      "errors_sample": [
+        "timeout: not searchable via memory_search: stress/mcp-w0012.md",
+        "timeout: not searchable via memory_search: stress/mcp-w0016.md",
+        "timeout: not searchable via memory_search: stress/mcp-w0013.md",
+        "timeout: not searchable via memory_search: stress/mcp-w0003.md",
+        "timeout: not searchable via memory_search: stress/mcp-w0006.md",
+        "timeout: not searchable via memory_search: stress/mcp-w0011.md"
+      ],
+      "integrity": "ok",
+      "baseline_intact": true,
+      "worker_boot_sec": [
+        24.4,
+        29.4,
+        29.5,
+        37.0,
+        30.9,
+        31.5,
+        29.8,
+        32.6,
+        31.3,
+        30.6,
+        30.5,
+        34.4,
+        35.5,
+        34.8,
+        35.8,
+        35.1
+      ],
+      "worker_elapsed": [
+        30.8,
+        44.1,
+        44.6,
+        46.4,
+        46.3,
+        48.0,
+        47.5,
+        49.7,
+        48.1,
+        48.6,
+        54.2,
+        56.6,
+        57.6,
+        56.8,
+        57.6,
+        56.6
+      ],
+      "robust": false
+    }
+  ],
+  "via": "truth mcp stdio"
+}

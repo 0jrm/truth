@@ -2,9 +2,49 @@
 
 from __future__ import annotations
 
-from truth.index.db import init_schema, open_db
+import sqlite3
+
+import sqlite_vec
+
+from truth.index.db import _schema_stale, init_schema, open_db
 from truth.index.indexer import index_file
 from truth.store.frontmatter import format_note
+
+
+def test_stale_v10_schema_drops_and_recreates_index_tables(tmp_path):
+    """v1.0 used 384-dim vectors and trigram FTS; init_schema must drop, not crash."""
+    db = tmp_path / "memory.db"
+    conn = sqlite3.connect(db)
+    conn.row_factory = sqlite3.Row
+    conn.enable_load_extension(True)
+    sqlite_vec.load(conn)
+    conn.enable_load_extension(False)
+    conn.executescript(
+        """
+        CREATE TABLE files (path TEXT PRIMARY KEY, content_hash TEXT, indexed_at TEXT);
+        CREATE TABLE chunks (
+          rowid INTEGER PRIMARY KEY, path TEXT, chunk_index INTEGER, text TEXT,
+          note_type TEXT, note_title TEXT
+        );
+        CREATE VIRTUAL TABLE chunks_fts USING fts5(text, tokenize='trigram');
+        CREATE VIRTUAL TABLE chunks_vec USING vec0(embedding float[384]);
+        CREATE TABLE notes (path TEXT PRIMARY KEY, type TEXT, title TEXT, mtime REAL);
+        CREATE TABLE events (id INTEGER PRIMARY KEY, path TEXT, op TEXT, ts TEXT);
+        INSERT INTO chunks (path, chunk_index, text) VALUES ('old.md', 0, 'stale');
+        """
+    )
+    conn.commit()
+    assert _schema_stale(conn)
+    init_schema(conn)
+    vec_sql = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE name='chunks_vec'"
+    ).fetchone()["sql"]
+    fts_sql = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE name='chunks_fts'"
+    ).fetchone()["sql"]
+    assert "float[768]" in vec_sql
+    assert "trigram" not in fts_sql
+    assert conn.execute("SELECT COUNT(*) AS n FROM chunks").fetchone()["n"] == 0
 
 
 def test_log_and_skip_index_excluded_from_chunks(isolated_truth):
